@@ -14,7 +14,104 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      form_submissions: {
+        Row: {
+          form_id: string
+          id: string
+          submission_data: Json
+          submitted_at: string
+          user_id: string
+        }
+        Insert: {
+          form_id: string
+          id?: string
+          submission_data: Json
+          submitted_at?: string
+          user_id: string
+        }
+        Update: {
+          form_id?: string
+          id?: string
+          submission_data?: Json
+          submitted_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "form_submissions_form_id_fkey"
+            columns: ["form_id"]
+            isOneToOne: false
+            referencedRelation: "forms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      forms: {
+        Row: {
+          business_phone: string | null
+          created_at: string
+          description: string | null
+          fields: Json | null
+          id: string
+          is_published: boolean | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          business_phone?: string | null
+          created_at?: string
+          description?: string | null
+          fields?: Json | null
+          id?: string
+          is_published?: boolean | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          business_phone?: string | null
+          created_at?: string
+          description?: string | null
+          fields?: Json | null
+          id?: string
+          is_published?: boolean | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          first_name: string | null
+          id: string
+          last_name: string | null
+          plan: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          plan?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          plan?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
