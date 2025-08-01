@@ -467,7 +467,10 @@ const Analytics = () => {
                         if (Array.isArray(value)) {
                           return value.length > 0 ? value.join(', ') : '—';
                         }
-                        return value || '—';
+                        if (value === null || value === undefined || value === '') {
+                          return '—';
+                        }
+                        return String(value);
                       }
                     })),
                     {

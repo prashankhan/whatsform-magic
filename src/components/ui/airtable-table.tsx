@@ -23,12 +23,33 @@ const AirtableTable = React.forwardRef<
   AirtableTableProps
 >(({ data, columns, className }, ref) => {
   const renderCell = (value: any, column: AirtableColumn, row: any) => {
+    // Handle custom render function first
     if (column.render) {
-      return column.render(value, row)
+      const rendered = column.render(value, row);
+      // Ensure rendered content is valid React child
+      if (rendered === null || rendered === undefined) {
+        return <span className="text-muted-foreground">—</span>;
+      }
+      return rendered;
     }
 
-    if (!value && value !== 0) {
-      return <span className="text-muted-foreground">—</span>
+    // Handle null/undefined/empty values
+    if (value === null || value === undefined || value === '') {
+      return <span className="text-muted-foreground">—</span>;
+    }
+
+    // Handle objects - convert to string representation
+    if (typeof value === 'object' && value !== null) {
+      if (Array.isArray(value)) {
+        // Handle arrays in the array case below
+      } else {
+        // For other objects, show a string representation
+        return (
+          <span className="text-sm text-muted-foreground" title={JSON.stringify(value)}>
+            [Object]
+          </span>
+        );
+      }
     }
 
     switch (column.type) {
@@ -77,11 +98,13 @@ const AirtableTable = React.forwardRef<
       case 'number':
         return <span className="text-sm font-mono">{value}</span>
       default:
+        // Ensure we always return a string for default case
+        const stringValue = String(value);
         return (
-          <span className="text-sm" title={String(value)}>
-            {String(value).length > 50 
-              ? `${String(value).substring(0, 50)}...` 
-              : String(value)
+          <span className="text-sm" title={stringValue}>
+            {stringValue.length > 50 
+              ? `${stringValue.substring(0, 50)}...` 
+              : stringValue
             }
           </span>
         )
