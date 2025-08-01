@@ -9,6 +9,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import FormBuilder from "./pages/FormBuilder";
 import PublicForm from "./pages/PublicForm";
+import Analytics from "./pages/Analytics";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,6 +23,7 @@ const App = () => (
         <Routes>
           <Route path="/auth" element={<Auth />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/analytics" element={<Analytics />} />
           <Route path="/form-builder" element={<FormBuilder />} />
           <Route path="/form-builder/:id" element={<FormBuilder />} />
           <Route path="/form/:id" element={<PublicForm />} />

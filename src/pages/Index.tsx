@@ -57,12 +57,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <NavBar 
-        isAuthenticated={!!user}
-        onSignIn={handleSignIn}
-        onSignOut={handleSignOut}
-        user={user}
-      />
+      <NavBar />
       <Hero onGetStarted={handleGetStarted} />
     </div>
   );

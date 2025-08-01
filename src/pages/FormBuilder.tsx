@@ -135,11 +135,7 @@ const FormBuilder = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
-        <NavBar 
-          isAuthenticated={!!user}
-          onSignOut={handleSignOut}
-          user={user}
-        />
+        <NavBar />
         <div className="flex items-center justify-center py-20">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
         </div>
@@ -149,11 +145,7 @@ const FormBuilder = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <NavBar 
-        isAuthenticated={!!user}
-        onSignOut={handleSignOut}
-        user={user}
-      />
+      <NavBar />
       
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
