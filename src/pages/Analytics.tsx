@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AirtableTable, type AirtableColumn } from '@/components/ui/airtable-table';
+import { ResponsesTable, type ResponsesTableColumn } from '@/components/ui/responses-table';
 import { Badge } from '@/components/ui/badge';
 import NavBar from '@/components/NavBar';
 import FormCard from '@/components/Analytics/FormCard';
@@ -250,8 +250,7 @@ const Analytics = () => {
         <Tabs defaultValue="overview" className="space-y-6">
           <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="forms">Forms</TabsTrigger>
-            <TabsTrigger value="responses">All Responses</TabsTrigger>
+            <TabsTrigger value="forms">Responses</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
@@ -357,8 +356,8 @@ const Analytics = () => {
               <div className="space-y-6">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Form Management</CardTitle>
-                    <CardDescription>View detailed analytics for each form</CardDescription>
+                    <CardTitle>Response Management</CardTitle>
+                    <CardDescription>View detailed analytics and responses for each form</CardDescription>
                   </CardHeader>
                 </Card>
                 
@@ -385,106 +384,6 @@ const Analytics = () => {
             )}
           </TabsContent>
 
-          <TabsContent value="responses" className="space-y-6">
-            {/* Filters */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Response Management</CardTitle>
-                <CardDescription>View, search, and export form responses</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <div className="flex-1">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        placeholder="Search responses..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-9"
-                      />
-                    </div>
-                  </div>
-                  <Select value={selectedForm} onValueChange={setSelectedForm}>
-                    <SelectTrigger className="w-full sm:w-[200px]">
-                      <SelectValue placeholder="Filter by form" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Forms</SelectItem>
-                      {forms.map(form => (
-                        <SelectItem key={form.id} value={form.id}>
-                          {form.title}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Button onClick={exportToCSV} variant="outline">
-                    <Download className="h-4 w-4 mr-2" />
-                    Export CSV
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Responses Table */}
-            <Card>
-              <CardContent className="p-0">
-                <AirtableTable 
-                  data={filteredSubmissions.map(submission => ({
-                    form_title: submission.forms?.title || 'Unknown Form',
-                    submitted_at: submission.submitted_at,
-                    ...Object.fromEntries(
-                      Object.entries(submission.submission_data).map(([key, value]) => [
-                        `field_${key}`, value
-                      ])
-                    ),
-                    status: 'Completed'
-                  }))}
-                  columns={[
-                    {
-                      key: 'form_title',
-                      label: 'Form',
-                      width: 'w-48'
-                    },
-                    {
-                      key: 'submitted_at',
-                      label: 'Submitted',
-                      type: 'date',
-                      width: 'w-48'
-                    },
-                    // Dynamic columns based on all field keys across all submissions
-                    ...Array.from(
-                      new Set(
-                        filteredSubmissions.flatMap(sub => 
-                          Object.keys(sub.submission_data).map(key => `field_${key}`)
-                        )
-                      )
-                    ).map(fieldKey => ({
-                      key: fieldKey,
-                      label: fieldKey.replace('field_', '').replace(/([A-Z])/g, ' $1').replace(/[_-]/g, ' ').trim().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
-                      width: 'min-w-[200px] flex-1',
-                      render: (value: any) => {
-                        if (Array.isArray(value)) {
-                          return value.length > 0 ? value.join(', ') : '—';
-                        }
-                        if (value === null || value === undefined || value === '') {
-                          return '—';
-                        }
-                        return String(value);
-                      }
-                    })),
-                    {
-                      key: 'status',
-                      label: 'Status',
-                      type: 'status' as const,
-                      width: 'w-24'
-                    }
-                  ]}
-                  className="min-h-[400px]"
-                />
-              </CardContent>
-            </Card>
-          </TabsContent>
         </Tabs>
       </div>
     </div>

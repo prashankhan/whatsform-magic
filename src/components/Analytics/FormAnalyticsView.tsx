@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { AirtableTable, type AirtableColumn } from '@/components/ui/airtable-table';
+import { ResponsesTable, type ResponsesTableColumn } from '@/components/ui/responses-table';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Download, Search, Calendar, FileText, TrendingUp } from 'lucide-react';
 import { format } from 'date-fns';
@@ -147,8 +147,8 @@ const FormAnalyticsView = ({ form, submissions, onBack }: FormAnalyticsViewProps
     )
   );
 
-  // Prepare columns for AirtableTable
-  const tableColumns: AirtableColumn[] = [
+  // Prepare columns for ResponsesTable
+  const tableColumns: ResponsesTableColumn[] = [
     {
       key: 'submitted_at',
       label: 'Submitted',
@@ -282,7 +282,7 @@ const FormAnalyticsView = ({ form, submissions, onBack }: FormAnalyticsViewProps
             </Button>
           </div>
 
-          <AirtableTable 
+          <ResponsesTable 
             data={tableData}
             columns={tableColumns}
             className="min-h-[400px]"
