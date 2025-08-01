@@ -55,7 +55,7 @@ const AirtableTable = React.forwardRef<
     switch (column.type) {
       case 'date':
         return (
-          <span className="text-sm font-medium">
+          <span className="text-sm text-foreground font-normal">
             {format(new Date(value), 'MMM dd, yyyy HH:mm')}
           </span>
         )
@@ -63,7 +63,7 @@ const AirtableTable = React.forwardRef<
         return (
           <a 
             href={`mailto:${value}`} 
-            className="text-primary hover:underline text-sm"
+            className="text-primary hover:underline text-sm underline-offset-2"
           >
             {value}
           </a>
@@ -72,7 +72,7 @@ const AirtableTable = React.forwardRef<
         return (
           <a 
             href={`tel:${value}`} 
-            className="text-primary hover:underline text-sm"
+            className="text-primary hover:underline text-sm underline-offset-2"
           >
             {value}
           </a>
@@ -81,29 +81,29 @@ const AirtableTable = React.forwardRef<
         return (
           <div className="flex flex-wrap gap-1">
             {Array.isArray(value) ? value.map((item, idx) => (
-              <Badge key={idx} variant="outline" className="text-xs">
+              <Badge key={idx} variant="outline" className="text-xs px-2 py-0.5 font-normal">
                 {String(item)}
               </Badge>
             )) : (
-              <span className="text-sm">{String(value)}</span>
+              <span className="text-sm text-foreground">{String(value)}</span>
             )}
           </div>
         )
       case 'status':
         return (
-          <Badge variant="secondary" className="text-xs">
+          <Badge variant="secondary" className="text-xs px-2 py-0.5 font-normal">
             {String(value)}
           </Badge>
         )
       case 'number':
-        return <span className="text-sm font-mono">{value}</span>
+        return <span className="text-sm font-mono text-foreground">{value}</span>
       default:
         // Ensure we always return a string for default case
         const stringValue = String(value);
         return (
-          <span className="text-sm" title={stringValue}>
-            {stringValue.length > 50 
-              ? `${stringValue.substring(0, 50)}...` 
+          <span className="text-sm text-foreground" title={stringValue}>
+            {stringValue.length > 60 
+              ? `${stringValue.substring(0, 60)}...` 
               : stringValue
             }
           </span>
@@ -112,53 +112,51 @@ const AirtableTable = React.forwardRef<
   }
 
   return (
-    <div ref={ref} className={cn("rounded-lg border bg-card overflow-hidden", className)}>
-      <ScrollArea className="h-full">
-        <div className="min-w-full">
-          {/* Header */}
-          <div className="flex bg-muted/30 border-b sticky top-0 z-10">
-            {columns.map((column) => (
-              <div
-                key={column.key}
-                className={cn(
-                  "flex items-center px-4 py-3 text-sm font-medium text-muted-foreground border-r last:border-r-0",
-                  column.width || "min-w-[150px] flex-1"
-                )}
-              >
-                {column.label}
-              </div>
-            ))}
-          </div>
-
-          {/* Body */}
-          <div className="divide-y">
-            {data.length === 0 ? (
-              <div className="flex items-center justify-center py-12 text-muted-foreground">
-                No data to display
-              </div>
-            ) : (
-              data.map((row, rowIndex) => (
-                <div 
-                  key={rowIndex} 
-                  className="flex hover:bg-muted/50 transition-colors group"
-                >
-                  {columns.map((column) => (
-                    <div
-                      key={column.key}
-                      className={cn(
-                        "flex items-center px-4 py-3 border-r last:border-r-0 min-h-[52px]",
-                        column.width || "min-w-[150px] flex-1"
-                      )}
-                    >
-                      {renderCell(row[column.key], column, row)}
-                    </div>
-                  ))}
-                </div>
-              ))
-            )}
-          </div>
+    <div ref={ref} className={cn("rounded-lg border bg-background overflow-hidden", className)}>
+      <div className="min-w-full">
+        {/* Header */}
+        <div className="flex bg-muted/20 border-b">
+          {columns.map((column) => (
+            <div
+              key={column.key}
+              className={cn(
+                "flex items-center px-3 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wide border-r border-border/40 last:border-r-0",
+                column.width || "min-w-[150px] flex-1"
+              )}
+            >
+              {column.label}
+            </div>
+          ))}
         </div>
-      </ScrollArea>
+
+        {/* Body */}
+        <div className="divide-y divide-border/40">
+          {data.length === 0 ? (
+            <div className="flex items-center justify-center py-16 text-muted-foreground text-sm">
+              No data to display
+            </div>
+          ) : (
+            data.map((row, rowIndex) => (
+              <div 
+                key={rowIndex} 
+                className="flex hover:bg-muted/30 transition-colors duration-150"
+              >
+                {columns.map((column) => (
+                  <div
+                    key={column.key}
+                    className={cn(
+                      "flex items-center px-3 py-3 border-r border-border/20 last:border-r-0 min-h-[48px] text-sm",
+                      column.width || "min-w-[150px] flex-1"
+                    )}
+                  >
+                    {renderCell(row[column.key], column, row)}
+                  </div>
+                ))}
+              </div>
+            ))
+          )}
+        </div>
+      </div>
     </div>
   )
 })
