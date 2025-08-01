@@ -14,9 +14,11 @@ interface ShareModalProps {
   isOpen: boolean;
   onClose: () => void;
   formData: FormData;
+  hasUnsavedChanges?: boolean;
+  onSaveAndShare?: () => Promise<void>;
 }
 
-const ShareModal = ({ isOpen, onClose, formData }: ShareModalProps) => {
+const ShareModal = ({ isOpen, onClose, formData, hasUnsavedChanges, onSaveAndShare }: ShareModalProps) => {
   const { toast } = useToast();
   const [copied, setCopied] = useState('');
 
@@ -50,7 +52,25 @@ const ShareModal = ({ isOpen, onClose, formData }: ShareModalProps) => {
           <DialogTitle>Share Your Form</DialogTitle>
         </DialogHeader>
         
-        {!formData.isPublished && (
+        {hasUnsavedChanges && (
+          <Alert className="border-orange-200 bg-orange-50">
+            <AlertTriangle className="h-4 w-4 text-orange-600" />
+            <AlertDescription className="text-orange-800 flex items-center justify-between">
+              <span>You have unsaved changes. Save your form first to share the latest version.</span>
+              {onSaveAndShare && (
+                <Button 
+                  size="sm" 
+                  onClick={onSaveAndShare}
+                  className="ml-3"
+                >
+                  Save & Share
+                </Button>
+              )}
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {!hasUnsavedChanges && !formData.isPublished && (
           <Alert className="border-yellow-200 bg-yellow-50">
             <AlertTriangle className="h-4 w-4 text-yellow-600" />
             <AlertDescription className="text-yellow-800">
@@ -60,16 +80,21 @@ const ShareModal = ({ isOpen, onClose, formData }: ShareModalProps) => {
         )}
         
         <Tabs defaultValue="link" className="w-full">
+          {hasUnsavedChanges && (
+            <div className="bg-muted/50 p-3 rounded-lg mb-4 text-center text-sm text-muted-foreground">
+              Sharing options will be available after saving your changes
+            </div>
+          )}
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="link">
+            <TabsTrigger value="link" disabled={hasUnsavedChanges}>
               <Link className="h-4 w-4 mr-2" />
               Link
             </TabsTrigger>
-            <TabsTrigger value="qr">
+            <TabsTrigger value="qr" disabled={hasUnsavedChanges}>
               <QrCode className="h-4 w-4 mr-2" />
               QR Code
             </TabsTrigger>
-            <TabsTrigger value="embed">
+            <TabsTrigger value="embed" disabled={hasUnsavedChanges}>
               <Code className="h-4 w-4 mr-2" />
               Embed
             </TabsTrigger>

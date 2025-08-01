@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -49,6 +49,12 @@ const FormEditor = ({ initialData, onSave, isLoading }: FormEditorProps) => {
   const [showPreview, setShowPreview] = useState(false);
   const [showShare, setShowShare] = useState(false);
   const { toast } = useToast();
+
+  // Track unsaved changes
+  const hasUnsavedChanges = useMemo(() => {
+    if (!initialData) return true; // New form always has unsaved changes
+    return JSON.stringify(formData) !== JSON.stringify(initialData);
+  }, [formData, initialData]);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -162,6 +168,11 @@ const FormEditor = ({ initialData, onSave, isLoading }: FormEditorProps) => {
         variant: "destructive",
       });
     }
+  };
+
+  const handleSaveAndShare = async () => {
+    await handleSave();
+    setShowShare(true);
   };
 
   return (
@@ -286,6 +297,9 @@ const FormEditor = ({ initialData, onSave, isLoading }: FormEditorProps) => {
           <Button onClick={handleSave} disabled={isLoading} className="flex-1">
             <Save className="h-4 w-4 mr-2" />
             {isLoading ? 'Saving...' : 'Save Form'}
+            {hasUnsavedChanges && (
+              <span className="ml-1 w-2 h-2 bg-orange-500 rounded-full" />
+            )}
           </Button>
           <Button variant="outline" onClick={() => setShowPreview(true)}>
             <Eye className="h-4 w-4 mr-2" />
@@ -316,7 +330,9 @@ const FormEditor = ({ initialData, onSave, isLoading }: FormEditorProps) => {
       <ShareModal 
         isOpen={showShare} 
         onClose={() => setShowShare(false)} 
-        formData={formData} 
+        formData={formData}
+        hasUnsavedChanges={hasUnsavedChanges}
+        onSaveAndShare={handleSaveAndShare}
       />
     </div>
   );
