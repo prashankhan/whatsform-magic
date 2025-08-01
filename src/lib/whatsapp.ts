@@ -14,6 +14,7 @@ export interface FormData {
   description?: string;
   businessPhone: string;
   fields: FormField[];
+  isPublished?: boolean;
 }
 
 export interface FormResponse {

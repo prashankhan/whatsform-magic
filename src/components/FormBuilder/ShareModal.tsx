@@ -7,7 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { FormData } from '@/lib/whatsapp';
-import { Copy, QrCode, Code, Link } from 'lucide-react';
+import { Copy, QrCode, Code, Link, AlertTriangle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface ShareModalProps {
   isOpen: boolean;
@@ -48,6 +49,15 @@ const ShareModal = ({ isOpen, onClose, formData }: ShareModalProps) => {
         <DialogHeader>
           <DialogTitle>Share Your Form</DialogTitle>
         </DialogHeader>
+        
+        {!formData.isPublished && (
+          <Alert className="border-yellow-200 bg-yellow-50">
+            <AlertTriangle className="h-4 w-4 text-yellow-600" />
+            <AlertDescription className="text-yellow-800">
+              This form is not published yet. Publish it first to make it accessible via the shared links.
+            </AlertDescription>
+          </Alert>
+        )}
         
         <Tabs defaultValue="link" className="w-full">
           <TabsList className="grid w-full grid-cols-3">

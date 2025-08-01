@@ -71,7 +71,8 @@ const FormBuilder = () => {
         title: data.title,
         description: data.description || '',
         businessPhone: data.business_phone || '',
-        fields: Array.isArray(data.fields) ? data.fields as any : []
+        fields: Array.isArray(data.fields) ? data.fields as any : [],
+        isPublished: data.is_published || false
       });
     } catch (error) {
       console.error('Error:', error);
@@ -94,6 +95,7 @@ const FormBuilder = () => {
         description: formData.description || null,
         business_phone: formData.businessPhone,
         fields: formData.fields as any, // Cast to any for JSONB compatibility
+        is_published: formData.isPublished || false,
         user_id: user?.id
       };
 

@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { FormData, FormField } from '@/lib/whatsapp';
@@ -12,7 +13,7 @@ import FieldEditor from './FieldEditor';
 import WhatsAppPreview from './WhatsAppPreview';
 import FormPreview from './FormPreview';
 import ShareModal from './ShareModal';
-import { Save, Eye, Share2 } from 'lucide-react';
+import { Save, Eye, Share2, Globe, Lock } from 'lucide-react';
 import {
   DndContext,
   closestCenter,
@@ -41,6 +42,7 @@ const FormEditor = ({ initialData, onSave, isLoading }: FormEditorProps) => {
     description: '',
     businessPhone: '',
     fields: [],
+    isPublished: false,
     ...initialData
   });
   const [expandedField, setExpandedField] = useState<string | null>(null);
@@ -204,6 +206,34 @@ const FormEditor = ({ initialData, onSave, isLoading }: FormEditorProps) => {
               <p className="text-xs text-muted-foreground">
                 Include country code (e.g., +1 for US, +44 for UK)
               </p>
+            </div>
+            
+            <div className="flex items-center justify-between p-4 border rounded-lg">
+              <div className="space-y-1">
+                <div className="flex items-center space-x-2">
+                  {formData.isPublished ? (
+                    <Globe className="h-4 w-4 text-green-600" />
+                  ) : (
+                    <Lock className="h-4 w-4 text-muted-foreground" />
+                  )}
+                  <Label htmlFor="publish-toggle" className="text-sm font-medium">
+                    {formData.isPublished ? 'Published' : 'Draft'}
+                  </Label>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {formData.isPublished 
+                    ? 'Your form is live and can be accessed via the public link'
+                    : 'Your form is in draft mode and not publicly accessible'
+                  }
+                </p>
+              </div>
+              <Switch
+                id="publish-toggle"
+                checked={formData.isPublished || false}
+                onCheckedChange={(checked) => 
+                  setFormData(prev => ({ ...prev, isPublished: checked }))
+                }
+              />
             </div>
           </CardContent>
         </Card>

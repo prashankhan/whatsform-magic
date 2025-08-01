@@ -261,7 +261,19 @@ export default function PublicForm() {
   }
 
   if (!formData) {
-    return <Navigate to="/404" replace />;
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-6">
+          <h1 className="text-2xl font-bold mb-4">Form Not Available</h1>
+          <p className="text-muted-foreground mb-4">
+            This form is either not published or doesn't exist. If you're the form owner, please make sure to publish your form in the Form Builder.
+          </p>
+          <Button onClick={() => window.location.href = '/'} variant="outline">
+            Go to Homepage
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   return (
