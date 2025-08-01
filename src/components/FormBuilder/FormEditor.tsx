@@ -48,13 +48,14 @@ const FormEditor = ({ initialData, onSave, isLoading }: FormEditorProps) => {
   const [expandedField, setExpandedField] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [showShare, setShowShare] = useState(false);
+  const [lastSavedData, setLastSavedData] = useState<FormData | null>(initialData || null);
   const { toast } = useToast();
 
-  // Track unsaved changes
+  // Track unsaved changes against last saved state
   const hasUnsavedChanges = useMemo(() => {
-    if (!initialData) return true; // New form always has unsaved changes
-    return JSON.stringify(formData) !== JSON.stringify(initialData);
-  }, [formData, initialData]);
+    if (!lastSavedData) return true; // New form always has unsaved changes
+    return JSON.stringify(formData) !== JSON.stringify(lastSavedData);
+  }, [formData, lastSavedData]);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -66,6 +67,7 @@ const FormEditor = ({ initialData, onSave, isLoading }: FormEditorProps) => {
   useEffect(() => {
     if (initialData) {
       setFormData(initialData);
+      setLastSavedData(initialData);
     }
   }, [initialData]);
 
@@ -157,6 +159,8 @@ const FormEditor = ({ initialData, onSave, isLoading }: FormEditorProps) => {
 
     try {
       await onSave(formData);
+      // Update last saved data to current form data
+      setLastSavedData({ ...formData });
       toast({
         title: "Form saved",
         description: "Your form has been saved successfully.",
@@ -173,9 +177,7 @@ const FormEditor = ({ initialData, onSave, isLoading }: FormEditorProps) => {
   const handleSaveAndShare = async () => {
     try {
       await handleSave();
-      // Close and reopen the modal to refresh the state
-      setShowShare(false);
-      setTimeout(() => setShowShare(true), 100);
+      // No need to close/reopen modal - state will update automatically
     } catch (error) {
       // Save failed, keep modal open with error state
     }
