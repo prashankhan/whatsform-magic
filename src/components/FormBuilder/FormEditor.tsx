@@ -10,7 +10,24 @@ import { FormData, FormField } from '@/lib/whatsapp';
 import FieldSelector from './FieldSelector';
 import FieldEditor from './FieldEditor';
 import WhatsAppPreview from './WhatsAppPreview';
+import FormPreview from './FormPreview';
+import ShareModal from './ShareModal';
 import { Save, Eye, Share2 } from 'lucide-react';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
 
 interface FormEditorProps {
   initialData?: FormData;
@@ -27,7 +44,16 @@ const FormEditor = ({ initialData, onSave, isLoading }: FormEditorProps) => {
     ...initialData
   });
   const [expandedField, setExpandedField] = useState<string | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
+  const [showShare, setShowShare] = useState(false);
   const { toast } = useToast();
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   useEffect(() => {
     if (initialData) {
@@ -84,6 +110,22 @@ const FormEditor = ({ initialData, onSave, isLoading }: FormEditorProps) => {
       title: "Field deleted",
       description: "The field has been removed from your form.",
     });
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (active.id !== over?.id) {
+      setFormData(prev => {
+        const oldIndex = prev.fields.findIndex(field => field.id === active.id);
+        const newIndex = prev.fields.findIndex(field => field.id === over?.id);
+        
+        return {
+          ...prev,
+          fields: arrayMove(prev.fields, oldIndex, newIndex)
+        };
+      });
+    }
   };
 
   const handleSave = async () => {
@@ -175,18 +217,29 @@ const FormEditor = ({ initialData, onSave, isLoading }: FormEditorProps) => {
             </span>
           </div>
           
-          {formData.fields.map((field) => (
-            <FieldEditor
-              key={field.id}
-              field={field}
-              onUpdate={(updatedField) => handleUpdateField(field.id, updatedField)}
-              onDelete={() => handleDeleteField(field.id)}
-              isExpanded={expandedField === field.id}
-              onToggleExpanded={() => setExpandedField(
-                expandedField === field.id ? null : field.id
-              )}
-            />
-          ))}
+          <DndContext 
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext 
+              items={formData.fields.map(field => field.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              {formData.fields.map((field) => (
+                <FieldEditor
+                  key={field.id}
+                  field={field}
+                  onUpdate={(updatedField) => handleUpdateField(field.id, updatedField)}
+                  onDelete={() => handleDeleteField(field.id)}
+                  isExpanded={expandedField === field.id}
+                  onToggleExpanded={() => setExpandedField(
+                    expandedField === field.id ? null : field.id
+                  )}
+                />
+              ))}
+            </SortableContext>
+          </DndContext>
           
           {formData.fields.length === 0 && (
             <div className="text-center p-8 border-2 border-dashed border-muted rounded-lg">
@@ -204,11 +257,15 @@ const FormEditor = ({ initialData, onSave, isLoading }: FormEditorProps) => {
             <Save className="h-4 w-4 mr-2" />
             {isLoading ? 'Saving...' : 'Save Form'}
           </Button>
-          <Button variant="outline">
+          <Button variant="outline" onClick={() => setShowPreview(true)}>
             <Eye className="h-4 w-4 mr-2" />
             Preview
           </Button>
-          <Button variant="outline">
+          <Button 
+            variant="outline" 
+            onClick={() => setShowShare(true)}
+            disabled={!formData.id}
+          >
             <Share2 className="h-4 w-4 mr-2" />
             Share
           </Button>
@@ -219,6 +276,18 @@ const FormEditor = ({ initialData, onSave, isLoading }: FormEditorProps) => {
       <div className="lg:sticky lg:top-6 lg:h-fit">
         <WhatsAppPreview formData={formData} />
       </div>
+
+      {/* Modals */}
+      <FormPreview 
+        isOpen={showPreview} 
+        onClose={() => setShowPreview(false)} 
+        formData={formData} 
+      />
+      <ShareModal 
+        isOpen={showShare} 
+        onClose={() => setShowShare(false)} 
+        formData={formData} 
+      />
     </div>
   );
 };

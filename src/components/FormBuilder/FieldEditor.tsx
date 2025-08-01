@@ -7,6 +7,8 @@ import { Trash2, GripVertical, Settings } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { FormField } from '@/lib/whatsapp';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface FieldEditorProps {
   field: FormField;
@@ -18,6 +20,15 @@ interface FieldEditorProps {
 
 const FieldEditor = ({ field, onUpdate, onDelete, isExpanded, onToggleExpanded }: FieldEditorProps) => {
   const [options, setOptions] = useState(field.options?.join('\n') || '');
+  
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: field.id });
 
   const handleOptionsChange = (value: string) => {
     setOptions(value);
@@ -36,14 +47,26 @@ const FieldEditor = ({ field, onUpdate, onDelete, isExpanded, onToggleExpanded }
     }
   };
 
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
   return (
-    <Card>
+    <Card ref={setNodeRef} style={style}>
       <Collapsible open={isExpanded} onOpenChange={onToggleExpanded}>
         <CollapsibleTrigger asChild>
           <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <GripVertical className="h-4 w-4 text-muted-foreground" />
+                <div 
+                  {...attributes} 
+                  {...listeners}
+                  className="cursor-grab active:cursor-grabbing"
+                >
+                  <GripVertical className="h-4 w-4 text-muted-foreground" />
+                </div>
                 <div>
                   <div className="font-medium">{field.label || 'Untitled Field'}</div>
                   <div className="text-sm text-muted-foreground">
