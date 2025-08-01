@@ -16,7 +16,9 @@ interface Form {
   created_at: string;
   updated_at: string;
   is_published: boolean;
-  fields: any[];
+  fields: any;
+  business_phone: string | null;
+  user_id: string;
 }
 
 const Dashboard = () => {
@@ -90,7 +92,7 @@ const Dashboard = () => {
       toast({
         title: "Upgrade Required",
         description: `Free plan is limited to ${FREE_FORM_LIMIT} forms. Upgrade to Pro for unlimited forms.`,
-        variant: "warning",
+        variant: "destructive",
       });
       return;
     }
@@ -182,7 +184,7 @@ const Dashboard = () => {
                     Upgrade to Pro for unlimited forms and advanced features
                   </p>
                 </div>
-                <Button variant="warning" size="sm">
+                <Button variant="outline" size="sm">
                   Upgrade to Pro
                 </Button>
               </div>
@@ -228,7 +230,7 @@ const Dashboard = () => {
                   <div className="space-y-4">
                     <div className="text-sm text-muted-foreground">
                       <p>Created: {new Date(form.created_at).toLocaleDateString()}</p>
-                      <p>Fields: {form.fields?.length || 0}</p>
+                      <p>Fields: {Array.isArray(form.fields) ? form.fields.length : 0}</p>
                     </div>
                     
                     <div className="flex items-center space-x-2">
