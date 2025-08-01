@@ -122,48 +122,54 @@ const AirtableTable = React.forwardRef<
   return (
     <div ref={ref} className={cn("rounded-lg border bg-background overflow-hidden", className)}>
       <div className="overflow-x-auto">
-        <div className="min-w-full">
+        <table className="min-w-full table-fixed">
           {/* Header */}
-          <div 
-            className="grid bg-muted/20 border-b border-border/40"
-            style={{ gridTemplateColumns }}
-          >
-            {columns.map((column) => (
-              <div
-                key={column.key}
-                className="flex items-center px-3 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wide border-r border-border/40 last:border-r-0"
-              >
-                <span className="truncate">{column.label}</span>
-              </div>
-            ))}
-          </div>
+          <thead className="bg-muted/20">
+            <tr>
+              {columns.map((column) => (
+                <th
+                  key={column.key}
+                  className="px-3 py-2.5 text-left text-xs font-medium text-muted-foreground uppercase tracking-wide border-r border-border/40 last:border-r-0"
+                  style={{ width: column.width || 'auto' }}
+                >
+                  <span className="truncate block">{column.label}</span>
+                </th>
+              ))}
+            </tr>
+          </thead>
 
           {/* Body */}
-          {data.length === 0 ? (
-            <div className="flex items-center justify-center py-16 text-muted-foreground text-sm">
-              No data to display
-            </div>
-          ) : (
-            data.map((row, rowIndex) => (
-              <div 
-                key={rowIndex}
-                className="grid hover:bg-muted/30 transition-colors duration-150 border-b border-border/20 last:border-b-0"
-                style={{ gridTemplateColumns }}
-              >
-                {columns.map((column) => (
-                  <div
-                    key={column.key}
-                    className="flex items-center px-3 py-3 border-r border-border/20 last:border-r-0 min-h-[48px]"
-                  >
-                    <div className="w-full min-w-0">
-                      {renderCell(row[column.key], column, row)}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ))
-          )}
-        </div>
+          <tbody className="divide-y divide-border/20">
+            {data.length === 0 ? (
+              <tr>
+                <td 
+                  colSpan={columns.length}
+                  className="px-3 py-16 text-center text-muted-foreground text-sm"
+                >
+                  No data to display
+                </td>
+              </tr>
+            ) : (
+              data.map((row, rowIndex) => (
+                <tr 
+                  key={rowIndex}
+                  className="hover:bg-muted/30 transition-colors duration-150"
+                >
+                  {columns.map((column) => (
+                    <td
+                      key={column.key}
+                      className="px-3 py-3 border-r border-border/20 last:border-r-0 min-h-[48px] align-top"
+                    >
+                      <div className="w-full min-w-0">
+                        {renderCell(row[column.key], column, row)}
+                      </div>
+                    </td>
+                  ))}
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   )
