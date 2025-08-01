@@ -6,8 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import NavBar from '@/components/NavBar';
-import { Plus, FileText, Eye, Edit, Trash2, Crown } from 'lucide-react';
+import { Plus, FileText, Eye, Edit, Trash2, Crown, CreditCard } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { SubscriptionProvider, useSubscription } from '@/hooks/useSubscription';
 
 interface Form {
   id: string;
@@ -21,39 +22,34 @@ interface Form {
   user_id: string;
 }
 
-const Dashboard = () => {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+const DashboardContent = () => {
   const [forms, setForms] = useState<Form[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isPro, setIsPro] = useState(false); // For now, default to free plan
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { subscribed, plan, createCheckout, manageSubscription } = useSubscription();
 
   const FREE_FORM_LIMIT = 2;
+  const isPro = plan === 'pro' || subscribed;
 
   useEffect(() => {
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        if (!session) {
-          navigate('/auth');
-        }
-      }
-    );
-
-    // Check for existing session
+    // Check for existing session and fetch forms
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
       if (!session) {
         navigate('/auth');
       } else {
         fetchForms();
       }
     });
+
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (!session) {
+          navigate('/auth');
+        }
+      }
+    );
 
     return () => subscription.unsubscribe();
   }, [navigate]);
@@ -81,10 +77,6 @@ const Dashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
   };
 
   const handleCreateForm = () => {
@@ -126,6 +118,14 @@ const Dashboard = () => {
     }
   };
 
+  const handleUpgrade = () => {
+    createCheckout();
+  };
+
+  const handleManageBilling = () => {
+    manageSubscription();
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
@@ -157,6 +157,14 @@ const Dashboard = () => {
               {isPro && <Crown className="h-3 w-3" />}
               <span>{isPro ? 'Pro Plan' : 'Free Plan'}</span>
             </Badge>
+
+            {/* Billing Management */}
+            {isPro ? (
+              <Button variant="outline" size="sm" onClick={handleManageBilling}>
+                <CreditCard className="h-4 w-4 mr-2" />
+                Manage Billing
+              </Button>
+            ) : null}
             
             <Button onClick={handleCreateForm} className="flex items-center space-x-2">
               <Plus className="h-4 w-4" />
@@ -176,7 +184,8 @@ const Dashboard = () => {
                     Upgrade to Pro for unlimited forms and advanced features
                   </p>
                 </div>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" onClick={handleUpgrade}>
+                  <Crown className="h-4 w-4 mr-2" />
                   Upgrade to Pro
                 </Button>
               </div>
@@ -260,6 +269,35 @@ const Dashboard = () => {
         )}
       </div>
     </div>
+  );
+};
+
+const Dashboard = () => {
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+
+  useEffect(() => {
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+      }
+    );
+
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  return (
+    <SubscriptionProvider user={user}>
+      <DashboardContent />
+    </SubscriptionProvider>
   );
 };
 
