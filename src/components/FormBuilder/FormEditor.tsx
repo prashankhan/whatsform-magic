@@ -171,8 +171,14 @@ const FormEditor = ({ initialData, onSave, isLoading }: FormEditorProps) => {
   };
 
   const handleSaveAndShare = async () => {
-    await handleSave();
-    setShowShare(true);
+    try {
+      await handleSave();
+      // Close and reopen the modal to refresh the state
+      setShowShare(false);
+      setTimeout(() => setShowShare(true), 100);
+    } catch (error) {
+      // Save failed, keep modal open with error state
+    }
   };
 
   return (
