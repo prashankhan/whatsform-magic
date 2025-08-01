@@ -8,7 +8,9 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import NavBar from '@/components/NavBar'; // RLS policy updated
+import NavBar from '@/components/NavBar';
+import FormCard from '@/components/Analytics/FormCard';
+import FormAnalyticsView from '@/components/Analytics/FormAnalyticsView';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { CalendarDays, TrendingUp, Users, FileText, Download, Search, Filter } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -17,7 +19,10 @@ import { format } from 'date-fns';
 interface Form {
   id: string;
   title: string;
+  description?: string;
   created_at: string;
+  is_published: boolean;
+  fields: any;
 }
 
 interface FormSubmission {
@@ -52,6 +57,7 @@ const Analytics = () => {
   const [selectedForm, setSelectedForm] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredSubmissions, setFilteredSubmissions] = useState<FormSubmission[]>([]);
+  const [selectedFormForAnalytics, setSelectedFormForAnalytics] = useState<string | null>(null);
 
   useEffect(() => {
     checkAuth();
@@ -74,10 +80,10 @@ const Analytics = () => {
     try {
       setLoading(true);
       
-      // Fetch forms
+      // Fetch forms with more details
       const { data: formsData, error: formsError } = await supabase
         .from('forms')
-        .select('id, title, created_at')
+        .select('id, title, description, created_at, is_published, fields')
         .order('created_at', { ascending: false });
 
       if (formsError) throw formsError;
@@ -176,6 +182,28 @@ const Analytics = () => {
     });
   };
 
+  const handleViewFormAnalytics = (formId: string) => {
+    setSelectedFormForAnalytics(formId);
+  };
+
+  const handleBackToForms = () => {
+    setSelectedFormForAnalytics(null);
+  };
+
+  const getFormSubmissions = (formId: string) => {
+    return submissions.filter(sub => sub.form_id === formId);
+  };
+
+  const getFormSubmissionCount = (formId: string) => {
+    return submissions.filter(sub => sub.form_id === formId).length;
+  };
+
+  const getLastSubmissionDate = (formId: string) => {
+    const formSubs = submissions.filter(sub => sub.form_id === formId);
+    if (formSubs.length === 0) return undefined;
+    return formSubs.sort((a, b) => new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime())[0].submitted_at;
+  };
+
   // Prepare chart data
   const chartData = forms.map(form => ({
     name: form.title.length > 20 ? form.title.substring(0, 20) + '...' : form.title,
@@ -222,7 +250,8 @@ const Analytics = () => {
         <Tabs defaultValue="overview" className="space-y-6">
           <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="responses">Responses</TabsTrigger>
+            <TabsTrigger value="forms">Forms</TabsTrigger>
+            <TabsTrigger value="responses">All Responses</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
@@ -315,6 +344,45 @@ const Analytics = () => {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          <TabsContent value="forms" className="space-y-6">
+            {selectedFormForAnalytics ? (
+              <FormAnalyticsView
+                form={forms.find(f => f.id === selectedFormForAnalytics)!}
+                submissions={getFormSubmissions(selectedFormForAnalytics)}
+                onBack={handleBackToForms}
+              />
+            ) : (
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Form Management</CardTitle>
+                    <CardDescription>View detailed analytics for each form</CardDescription>
+                  </CardHeader>
+                </Card>
+                
+                {forms.length === 0 ? (
+                  <Card>
+                    <CardContent className="p-8 text-center">
+                      <p className="text-muted-foreground">No forms found. Create your first form to see analytics.</p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {forms.map(form => (
+                      <FormCard
+                        key={form.id}
+                        form={form}
+                        submissionCount={getFormSubmissionCount(form.id)}
+                        lastSubmissionDate={getLastSubmissionDate(form.id)}
+                        onViewAnalytics={handleViewFormAnalytics}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="responses" className="space-y-6">
