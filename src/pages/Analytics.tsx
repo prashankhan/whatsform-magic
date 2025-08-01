@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { AirtableTable, type AirtableColumn } from '@/components/ui/airtable-table';
 import { Badge } from '@/components/ui/badge';
 import NavBar from '@/components/NavBar';
 import FormCard from '@/components/Analytics/FormCard';
@@ -429,49 +429,56 @@ const Analytics = () => {
             {/* Responses Table */}
             <Card>
               <CardContent className="p-0">
-                {filteredSubmissions.length === 0 ? (
-                  <div className="p-8 text-center">
-                    <p className="text-muted-foreground">No responses found</p>
-                  </div>
-                ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Form</TableHead>
-                        <TableHead>Submitted</TableHead>
-                        <TableHead>Response Data</TableHead>
-                        <TableHead>Status</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredSubmissions.map((submission) => (
-                        <TableRow key={submission.id}>
-                          <TableCell className="font-medium">
-                            {submission.forms?.title}
-                          </TableCell>
-                          <TableCell>
-                            {format(new Date(submission.submitted_at), 'MMM dd, yyyy HH:mm')}
-                          </TableCell>
-                          <TableCell className="max-w-md">
-                            <div className="space-y-1">
-                              {Object.entries(submission.submission_data).map(([key, value]) => (
-                                <div key={key} className="text-sm">
-                                  <span className="font-medium">{key}:</span>{' '}
-                                  <span className="text-muted-foreground">
-                                    {Array.isArray(value) ? value.join(', ') : String(value)}
-                                  </span>
-                                </div>
-                              ))}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="secondary">Completed</Badge>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                )}
+                <AirtableTable 
+                  data={filteredSubmissions.map(submission => ({
+                    form_title: submission.forms?.title || 'Unknown Form',
+                    submitted_at: submission.submitted_at,
+                    ...Object.fromEntries(
+                      Object.entries(submission.submission_data).map(([key, value]) => [
+                        `field_${key}`, value
+                      ])
+                    ),
+                    status: 'Completed'
+                  }))}
+                  columns={[
+                    {
+                      key: 'form_title',
+                      label: 'Form',
+                      width: 'w-48'
+                    },
+                    {
+                      key: 'submitted_at',
+                      label: 'Submitted',
+                      type: 'date',
+                      width: 'w-48'
+                    },
+                    // Dynamic columns based on all field keys across all submissions
+                    ...Array.from(
+                      new Set(
+                        filteredSubmissions.flatMap(sub => 
+                          Object.keys(sub.submission_data).map(key => `field_${key}`)
+                        )
+                      )
+                    ).map(fieldKey => ({
+                      key: fieldKey,
+                      label: fieldKey.replace('field_', '').replace(/([A-Z])/g, ' $1').replace(/[_-]/g, ' ').trim().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
+                      width: 'min-w-[200px] flex-1',
+                      render: (value: any) => {
+                        if (Array.isArray(value)) {
+                          return value.length > 0 ? value.join(', ') : '—';
+                        }
+                        return value || '—';
+                      }
+                    })),
+                    {
+                      key: 'status',
+                      label: 'Status',
+                      type: 'status' as const,
+                      width: 'w-24'
+                    }
+                  ]}
+                  className="min-h-[400px]"
+                />
               </CardContent>
             </Card>
           </TabsContent>

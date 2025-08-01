@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { AirtableTable, type AirtableColumn } from '@/components/ui/airtable-table';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Download, Search, Calendar, FileText, TrendingUp } from 'lucide-react';
 import { format } from 'date-fns';
@@ -97,12 +97,87 @@ const FormAnalyticsView = ({ form, submissions, onBack }: FormAnalyticsViewProps
     .map(([date, count]) => ({ date, count }))
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
+  // Get form field information for better column labels
+  const getFieldLabel = (fieldKey: string) => {
+    if (!form.fields || !Array.isArray(form.fields)) return fieldKey;
+    
+    const field = form.fields.find((f: any) => f.id === fieldKey || f.name === fieldKey);
+    if (field) {
+      return field.label || field.name || fieldKey;
+    }
+    
+    // Fallback: format the key nicely
+    return fieldKey
+      .replace(/([A-Z])/g, ' $1')
+      .replace(/[_-]/g, ' ')
+      .trim()
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
+  const getFieldType = (fieldKey: string): 'text' | 'date' | 'email' | 'phone' | 'number' | 'array' | 'status' => {
+    if (!form.fields || !Array.isArray(form.fields)) return 'text';
+    
+    const field = form.fields.find((f: any) => f.id === fieldKey || f.name === fieldKey);
+    if (field) {
+      switch (field.type) {
+        case 'email': return 'email';
+        case 'phone': return 'phone';
+        case 'number': return 'number';
+        case 'date': return 'date';
+        case 'checkbox': return 'array';
+        case 'select': return 'text';
+        default: return 'text';
+      }
+    }
+    
+    // Try to infer type from key name
+    if (fieldKey.toLowerCase().includes('email')) return 'email';
+    if (fieldKey.toLowerCase().includes('phone')) return 'phone';
+    if (fieldKey.toLowerCase().includes('date')) return 'date';
+    
+    return 'text';
+  };
+
   // Get unique field keys for dynamic table headers
   const allFieldKeys = Array.from(
     new Set(
       submissions.flatMap(sub => Object.keys(sub.submission_data))
     )
   );
+
+  // Prepare columns for AirtableTable
+  const tableColumns: AirtableColumn[] = [
+    {
+      key: 'submitted_at',
+      label: 'Submitted',
+      type: 'date',
+      width: 'w-48'
+    },
+    ...allFieldKeys.map(key => ({
+      key: `submission_data.${key}`,
+      label: getFieldLabel(key),
+      type: getFieldType(key) as 'text' | 'date' | 'email' | 'phone' | 'number' | 'array' | 'status',
+      width: 'min-w-[200px] flex-1'
+    })),
+    {
+      key: 'status',
+      label: 'Status',
+      type: 'status' as const,
+      width: 'w-24',
+      render: () => 'Completed'
+    }
+  ];
+
+  // Prepare data for AirtableTable
+  const tableData = filteredSubmissions.map(submission => ({
+    ...submission,
+    ...Object.fromEntries(
+      allFieldKeys.map(key => [`submission_data.${key}`, submission.submission_data[key]])
+    ),
+    status: 'Completed'
+  }));
 
   return (
     <div className="space-y-6">
@@ -207,49 +282,11 @@ const FormAnalyticsView = ({ form, submissions, onBack }: FormAnalyticsViewProps
             </Button>
           </div>
 
-          {filteredSubmissions.length === 0 ? (
-            <div className="p-8 text-center">
-              <p className="text-muted-foreground">No responses found</p>
-            </div>
-          ) : (
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Submitted</TableHead>
-                    {allFieldKeys.map(key => (
-                      <TableHead key={key} className="capitalize">
-                        {key.replace(/([A-Z])/g, ' $1').trim()}
-                      </TableHead>
-                    ))}
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredSubmissions.map((submission) => (
-                    <TableRow key={submission.id}>
-                      <TableCell className="font-medium">
-                        {format(new Date(submission.submitted_at), 'MMM dd, yyyy HH:mm')}
-                      </TableCell>
-                      {allFieldKeys.map(key => (
-                        <TableCell key={key} className="max-w-xs">
-                          <div className="truncate">
-                            {Array.isArray(submission.submission_data[key]) 
-                              ? submission.submission_data[key].join(', ')
-                              : String(submission.submission_data[key] || '-')
-                            }
-                          </div>
-                        </TableCell>
-                      ))}
-                      <TableCell>
-                        <Badge variant="secondary">Completed</Badge>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
+          <AirtableTable 
+            data={tableData}
+            columns={tableColumns}
+            className="min-h-[400px]"
+          />
         </CardContent>
       </Card>
     </div>
