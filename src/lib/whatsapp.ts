@@ -37,6 +37,7 @@ export interface FormData {
   google_sheets_enabled?: boolean;
   google_sheets_spreadsheet_id?: string;
   google_sheets_worksheet_name?: string;
+  google_sheets_api_key?: string;
 }
 
 export interface FormResponse {

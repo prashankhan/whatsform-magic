@@ -381,14 +381,16 @@ const FormEditor = ({ initialData, onSave, isLoading }: FormEditorProps) => {
           googleSheetsConfig={{
             enabled: formData.google_sheets_enabled || false,
             spreadsheetId: formData.google_sheets_spreadsheet_id || '',
-            worksheetName: formData.google_sheets_worksheet_name || 'Sheet1'
+            worksheetName: formData.google_sheets_worksheet_name || 'Sheet1',
+            apiKey: formData.google_sheets_api_key || ''
           }}
           onUpdate={(config) => 
             setFormData(prev => ({ 
               ...prev, 
               google_sheets_enabled: config.enabled,
               google_sheets_spreadsheet_id: config.spreadsheetId,
-              google_sheets_worksheet_name: config.worksheetName
+              google_sheets_worksheet_name: config.worksheetName,
+              google_sheets_api_key: config.apiKey
             }))
           }
         />

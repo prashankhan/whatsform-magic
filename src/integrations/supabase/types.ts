@@ -52,6 +52,7 @@ export type Database = {
           created_at: string
           description: string | null
           fields: Json | null
+          google_sheets_api_key: string | null
           google_sheets_enabled: boolean | null
           google_sheets_spreadsheet_id: string | null
           google_sheets_worksheet_name: string | null
@@ -71,6 +72,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           fields?: Json | null
+          google_sheets_api_key?: string | null
           google_sheets_enabled?: boolean | null
           google_sheets_spreadsheet_id?: string | null
           google_sheets_worksheet_name?: string | null
@@ -90,6 +92,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           fields?: Json | null
+          google_sheets_api_key?: string | null
           google_sheets_enabled?: boolean | null
           google_sheets_spreadsheet_id?: string | null
           google_sheets_worksheet_name?: string | null

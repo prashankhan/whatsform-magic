@@ -7,14 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { useGoogleAuth } from '@/hooks/useGoogleAuth';
-import { Link as LinkIcon, Unlink, CheckCircle, AlertCircle } from 'lucide-react';
+import { ExternalLink, CheckCircle, AlertCircle, Key } from 'lucide-react';
 
 interface GoogleSheetsConfig {
   enabled: boolean;
   spreadsheetId: string;
   worksheetName: string;
+  apiKey: string;
 }
 
 interface GoogleSheetsSettingsProps {
@@ -27,14 +26,13 @@ const GoogleSheetsSettings: React.FC<GoogleSheetsSettingsProps> = ({
   onUpdate,
 }) => {
   const [isTestingConnection, setIsTestingConnection] = useState(false);
-  const { isConnected, connectedAt, loading, connectGoogle, disconnectGoogle } = useGoogleAuth();
 
   const testConnection = async () => {
-    if (!googleSheetsConfig.spreadsheetId) {
+    if (!googleSheetsConfig.spreadsheetId || !googleSheetsConfig.apiKey) {
       toast({
         variant: "destructive",
         title: "Missing Configuration",
-        description: "Please enter a spreadsheet ID first."
+        description: "Please enter both spreadsheet ID and API key first."
       });
       return;
     }
@@ -43,7 +41,7 @@ const GoogleSheetsSettings: React.FC<GoogleSheetsSettingsProps> = ({
     try {
       // Test Google Sheets API connection by trying to read the spreadsheet
       const response = await fetch(
-        `https://sheets.googleapis.com/v4/spreadsheets/${googleSheetsConfig.spreadsheetId}?key=${import.meta.env.VITE_GOOGLE_SHEETS_API_KEY || 'test'}`,
+        `https://sheets.googleapis.com/v4/spreadsheets/${googleSheetsConfig.spreadsheetId}?key=${googleSheetsConfig.apiKey}`,
         { method: 'GET' }
       );
       
@@ -96,162 +94,124 @@ const GoogleSheetsSettings: React.FC<GoogleSheetsSettingsProps> = ({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Google Account Connection Status */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <Label className="text-base font-medium">Google Account</Label>
-            <div className="flex items-center gap-2">
-              {loading ? (
-                <Badge variant="outline">Checking...</Badge>
-              ) : isConnected ? (
-                <Badge variant="default" className="flex items-center gap-1">
-                  <CheckCircle className="h-3 w-3" />
-                  Connected
-                </Badge>
-              ) : (
-                <Badge variant="outline" className="flex items-center gap-1">
-                  <AlertCircle className="h-3 w-3" />
-                  Not Connected
-                </Badge>
-              )}
+        {/* Enable/Disable Toggle */}
+        <div className="flex items-center space-x-2">
+          <Switch
+            id="google-sheets-enabled"
+            checked={googleSheetsConfig.enabled}
+            onCheckedChange={(enabled) =>
+              onUpdate({ ...googleSheetsConfig, enabled })
+            }
+          />
+          <Label htmlFor="google-sheets-enabled">
+            Enable Google Sheets integration
+          </Label>
+        </div>
+
+        {googleSheetsConfig.enabled && (
+          <div className="space-y-4">
+            {/* API Key Section */}
+            <div className="space-y-2">
+              <Label htmlFor="api-key" className="flex items-center gap-2">
+                <Key className="h-4 w-4" />
+                Google Sheets API Key
+              </Label>
+              <Input
+                id="api-key"
+                type="password"
+                placeholder="Enter your Google Sheets API key"
+                value={googleSheetsConfig.apiKey}
+                onChange={(e) =>
+                  onUpdate({
+                    ...googleSheetsConfig,
+                    apiKey: e.target.value
+                  })
+                }
+              />
+              <div className="bg-muted p-3 rounded-md">
+                <h4 className="font-medium mb-2 text-sm">How to get your API Key:</h4>
+                <ol className="text-xs space-y-1 list-decimal list-inside text-muted-foreground">
+                  <li>Go to <a href="https://console.cloud.google.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-1">Google Cloud Console <ExternalLink className="h-3 w-3" /></a></li>
+                  <li>Create a new project or select an existing one</li>
+                  <li>Enable the Google Sheets API in the API Library</li>
+                  <li>Go to "Credentials" and click "Create Credentials" → "API Key"</li>
+                  <li>Restrict the API key to only Google Sheets API for security</li>
+                  <li>Copy and paste the API key above</li>
+                </ol>
+              </div>
             </div>
-          </div>
 
-          {isConnected ? (
-            <Alert>
-              <CheckCircle className="h-4 w-4" />
-              <AlertDescription>
-                Your Google account is connected and ready to use with Google Sheets.
-                {connectedAt && (
-                  <span className="block text-xs text-muted-foreground mt-1">
-                    Connected on {new Date(connectedAt).toLocaleDateString()}
-                  </span>
-                )}
-              </AlertDescription>
-            </Alert>
-          ) : (
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                Connect your Google account to enable Google Sheets integration for your forms.
-              </AlertDescription>
-            </Alert>
-          )}
+            {/* Spreadsheet Configuration */}
+            <div className="space-y-2">
+              <Label htmlFor="spreadsheet-id">
+                Spreadsheet ID or URL
+              </Label>
+              <Input
+                id="spreadsheet-id"
+                placeholder="Enter Google Sheets URL or spreadsheet ID"
+                value={googleSheetsConfig.spreadsheetId}
+                onChange={(e) => handleSpreadsheetIdChange(e.target.value)}
+              />
+              <p className="text-sm text-muted-foreground">
+                You can paste the full Google Sheets URL or just the spreadsheet ID.
+              </p>
+            </div>
 
-          <div className="flex gap-2">
-            {isConnected ? (
-              <Button 
-                onClick={disconnectGoogle} 
-                disabled={loading}
+            <div className="space-y-2">
+              <Label htmlFor="worksheet-name">
+                Worksheet Name
+              </Label>
+              <Input
+                id="worksheet-name"
+                placeholder="Sheet1"
+                value={googleSheetsConfig.worksheetName}
+                onChange={(e) =>
+                  onUpdate({
+                    ...googleSheetsConfig,
+                    worksheetName: e.target.value || 'Sheet1'
+                  })
+                }
+              />
+              <p className="text-sm text-muted-foreground">
+                Name of the worksheet tab where data will be added (default: Sheet1).
+              </p>
+            </div>
+
+            {/* Test Connection Button */}
+            {googleSheetsConfig.spreadsheetId && googleSheetsConfig.apiKey && (
+              <Button
+                onClick={testConnection}
+                disabled={isTestingConnection}
                 variant="outline"
                 size="sm"
                 className="flex items-center gap-2"
               >
-                <Unlink className="h-4 w-4" />
-                Disconnect Google Account
-              </Button>
-            ) : (
-              <Button 
-                onClick={connectGoogle} 
-                disabled={loading}
-                size="sm"
-                className="flex items-center gap-2"
-              >
-                <LinkIcon className="h-4 w-4" />
-                Connect Google Account
+                <CheckCircle className="h-4 w-4" />
+                {isTestingConnection ? "Testing..." : "Test Connection"}
               </Button>
             )}
+
+            {/* Configuration Summary */}
+            {googleSheetsConfig.spreadsheetId && (
+              <div className="p-2 bg-muted rounded">
+                <p className="text-sm">
+                  <strong>Spreadsheet ID:</strong>{' '}
+                  <code className="bg-background px-1 py-0.5 rounded text-xs">
+                    {googleSheetsConfig.spreadsheetId}
+                  </code>
+                </p>
+              </div>
+            )}
+
+            {/* Important Notes */}
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription className="text-sm">
+                <strong>Important:</strong> Make sure your Google Sheets spreadsheet is accessible with your API key. 
+                The spreadsheet should be either public or shared with your Google Cloud project's service account.
+              </AlertDescription>
+            </Alert>
           </div>
-        </div>
-
-        {/* Google Sheets Integration Settings - Only show if connected */}
-        {isConnected && (
-          <>
-            <div className="border-t pt-4">
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="google-sheets-enabled"
-                  checked={googleSheetsConfig.enabled}
-                  onCheckedChange={(enabled) =>
-                    onUpdate({ ...googleSheetsConfig, enabled })
-                  }
-                />
-                <Label htmlFor="google-sheets-enabled">
-                  Enable Google Sheets integration
-                </Label>
-              </div>
-            </div>
-
-            {googleSheetsConfig.enabled && (
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="spreadsheet-id">
-                    Spreadsheet ID or URL
-                  </Label>
-                  <Input
-                    id="spreadsheet-id"
-                    placeholder="Enter Google Sheets URL or spreadsheet ID"
-                    value={googleSheetsConfig.spreadsheetId}
-                    onChange={(e) => handleSpreadsheetIdChange(e.target.value)}
-                  />
-                  <p className="text-sm text-muted-foreground">
-                    You can paste the full Google Sheets URL or just the spreadsheet ID.
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="worksheet-name">
-                    Worksheet Name
-                  </Label>
-                  <Input
-                    id="worksheet-name"
-                    placeholder="Sheet1"
-                    value={googleSheetsConfig.worksheetName}
-                    onChange={(e) =>
-                      onUpdate({
-                        ...googleSheetsConfig,
-                        worksheetName: e.target.value || 'Sheet1'
-                      })
-                    }
-                  />
-                  <p className="text-sm text-muted-foreground">
-                    Name of the worksheet tab where data will be added (default: Sheet1).
-                  </p>
-                </div>
-
-                <div className="bg-muted p-3 rounded-md">
-                  <h4 className="font-medium mb-2">Setup Instructions:</h4>
-                  <ol className="text-sm space-y-1 list-decimal list-inside text-muted-foreground">
-                    <li>Create a Google Sheets spreadsheet in your connected Google account</li>
-                    <li>Copy the spreadsheet URL or ID and paste it above</li>
-                    <li>Specify the worksheet name (optional, defaults to "Sheet1")</li>
-                    <li>Save your form to activate the integration</li>
-                  </ol>
-                </div>
-
-                {googleSheetsConfig.spreadsheetId && (
-                  <div className="p-2 bg-muted rounded">
-                    <p className="text-sm">
-                      <strong>Spreadsheet ID:</strong>{' '}
-                      <code className="bg-background px-1 py-0.5 rounded text-xs">
-                        {googleSheetsConfig.spreadsheetId}
-                      </code>
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-          </>
-        )}
-
-        {/* Show message if not connected and trying to enable */}
-        {!isConnected && googleSheetsConfig.enabled && (
-          <Alert>
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              Please connect your Google account first to enable Google Sheets integration.
-            </AlertDescription>
-          </Alert>
         )}
       </CardContent>
     </Card>
