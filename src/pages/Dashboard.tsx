@@ -59,9 +59,18 @@ const DashboardContent = () => {
   const fetchForms = async () => {
     setLoading(true);
     try {
+      // Get current user session
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.user) {
+        navigate('/auth');
+        return;
+      }
+
       const { data, error } = await supabase
         .from('forms')
         .select('*')
+        .eq('user_id', session.user.id) // CRITICAL: Filter by current user's ID
         .order('updated_at', { ascending: false });
 
       if (error) {

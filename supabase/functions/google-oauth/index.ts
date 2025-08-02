@@ -12,6 +12,12 @@ const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const googleClientId = Deno.env.get('GOOGLE_CLIENT_ID');
 const googleClientSecret = Deno.env.get('GOOGLE_CLIENT_SECRET');
 
+console.log('[GOOGLE-OAUTH] Environment check:', {
+  hasClientId: !!googleClientId,
+  hasClientSecret: !!googleClientSecret,
+  clientIdLength: googleClientId?.length || 0
+});
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
