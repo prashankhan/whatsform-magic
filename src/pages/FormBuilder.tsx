@@ -52,7 +52,13 @@ const FormBuilderContent = () => {
         businessPhone: data.business_phone || '',
         fields: Array.isArray(data.fields) ? data.fields as any : [],
         isPublished: data.is_published || false,
-        thankYouPage: (data.thank_you_page && typeof data.thank_you_page === 'object') ? data.thank_you_page as any : undefined
+        thankYouPage: (data.thank_you_page && typeof data.thank_you_page === 'object') ? data.thank_you_page as any : undefined,
+        webhook_enabled: data.webhook_enabled || false,
+        webhook_url: data.webhook_url || '',
+        webhook_method: data.webhook_method || 'POST',
+        webhook_headers: (typeof data.webhook_headers === 'object' && data.webhook_headers !== null) 
+          ? data.webhook_headers as Record<string, string> 
+          : {}
       });
     } catch (error) {
       console.error('Error:', error);
@@ -84,6 +90,10 @@ const FormBuilderContent = () => {
         fields: formData.fields as any, // Cast to any for JSONB compatibility
         is_published: formData.isPublished || false,
         thank_you_page: formData.thankYouPage || null,
+        webhook_enabled: formData.webhook_enabled || false,
+        webhook_url: formData.webhook_url || null,
+        webhook_method: formData.webhook_method || 'POST',
+        webhook_headers: formData.webhook_headers || {},
         user_id: user?.id
       };
 
