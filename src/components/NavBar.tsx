@@ -102,11 +102,8 @@ const NavBar = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => navigate('/dashboard')}>
-                    Dashboard
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate('/analytics')}>
-                    Analytics
+                  <DropdownMenuItem onClick={() => navigate('/billing')}>
+                    Manage Billing
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleSignOut}>
                     Sign Out

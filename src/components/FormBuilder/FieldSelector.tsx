@@ -89,22 +89,22 @@ const FieldSelector = ({ onAddField }: FieldSelectorProps) => {
           Choose a field type to add to your form
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <div className="grid gap-3">
+      <CardContent className="p-4 sm:p-6">
+        <div className="grid gap-2 sm:gap-3">
           {fieldTypes.map((fieldType) => {
             const IconComponent = fieldType.icon;
             return (
               <Button
                 key={fieldType.type}
                 variant="outline"
-                className="h-auto p-4 justify-start"
+                className="h-auto p-3 sm:p-4 justify-start text-left hover:bg-muted/50 transition-colors"
                 onClick={() => onAddField(fieldType.type)}
               >
-                <div className="flex items-center space-x-3 w-full">
-                  <IconComponent className={`h-5 w-5 ${fieldType.color}`} />
-                  <div className="text-left flex-1">
-                    <div className="font-medium">{fieldType.label}</div>
-                    <div className="text-xs text-muted-foreground">
+                <div className="flex items-center space-x-2 sm:space-x-3 w-full">
+                  <IconComponent className={`h-4 w-4 sm:h-5 sm:w-5 ${fieldType.color} flex-shrink-0`} />
+                  <div className="text-left flex-1 min-w-0">
+                    <div className="font-medium text-sm sm:text-base truncate">{fieldType.label}</div>
+                    <div className="text-xs text-muted-foreground line-clamp-1 sm:line-clamp-none">
                       {fieldType.description}
                     </div>
                   </div>

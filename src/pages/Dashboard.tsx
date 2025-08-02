@@ -156,22 +156,6 @@ const DashboardContent = () => {
               <span>{isPro ? 'Pro Plan' : 'Free Plan'}</span>
             </Badge>
 
-            {/* Billing Management */}
-            {isPro ? (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleManageBilling}
-                disabled={portalLoading}
-              >
-                {portalLoading ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : (
-                  <CreditCard className="h-4 w-4 mr-2" />
-                )}
-                {portalLoading ? 'Opening Portal...' : 'Manage Billing'}
-              </Button>
-            ) : null}
             
             <Button onClick={handleCreateForm} className="flex items-center space-x-2">
               <Plus className="h-4 w-4" />

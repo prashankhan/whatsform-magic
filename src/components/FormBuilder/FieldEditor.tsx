@@ -81,25 +81,25 @@ const FieldEditor = ({ field, onUpdate, onDelete, isExpanded, onToggleExpanded }
     <Card ref={setNodeRef} style={style}>
       <Collapsible open={isExpanded} onOpenChange={onToggleExpanded}>
         <CollapsibleTrigger asChild>
-          <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+          <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors p-4 sm:p-6">
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
                 <div 
                   {...attributes} 
                   {...listeners}
-                  className="cursor-grab active:cursor-grabbing"
+                  className="cursor-grab active:cursor-grabbing touch-manipulation p-1"
                 >
                   <GripVertical className="h-4 w-4 text-muted-foreground" />
                 </div>
-                <div className="flex-1">
-                  <div className="font-medium">{field.label || 'Untitled Field'}</div>
-                  <div className="text-sm text-muted-foreground">
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium truncate text-sm sm:text-base">{field.label || 'Untitled Field'}</div>
+                  <div className="text-xs sm:text-sm text-muted-foreground">
                     {getFieldTypeLabel(field.type)}
                   </div>
                 </div>
               </div>
-              <div className="flex items-center space-x-2">
-                <Settings className="h-4 w-4 text-muted-foreground" />
+              <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
+                <Settings className="h-4 w-4 text-muted-foreground hidden sm:block" />
                 <Button
                   variant="ghost"
                   size="sm"
@@ -107,7 +107,7 @@ const FieldEditor = ({ field, onUpdate, onDelete, isExpanded, onToggleExpanded }
                     e.stopPropagation();
                     onDelete();
                   }}
-                  className="text-destructive hover:text-destructive"
+                  className="text-destructive hover:text-destructive p-1 h-8 w-8"
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -117,7 +117,7 @@ const FieldEditor = ({ field, onUpdate, onDelete, isExpanded, onToggleExpanded }
         </CollapsibleTrigger>
         
         <CollapsibleContent>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 p-4 sm:p-6 pt-0">
             {/* Field Label */}
             <div className="space-y-2">
               <Label htmlFor={`label-${field.id}`}>

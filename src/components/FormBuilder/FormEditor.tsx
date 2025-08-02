@@ -210,9 +210,9 @@ const FormEditor = ({ initialData, onSave, isLoading }: FormEditorProps) => {
   };
 
   return (
-    <div className="grid lg:grid-cols-2 gap-6 h-full">{/* ... keep existing code */}
+    <div className="flex flex-col lg:grid lg:grid-cols-2 gap-4 lg:gap-6 h-full min-h-screen lg:min-h-fit">{/* ... keep existing code */}
       {/* Form Editor Panel */}
-      <div className="space-y-6">
+      <div className="space-y-4 lg:space-y-6 order-2 lg:order-1">
         {/* Form Settings */}
         <Card>
           <CardHeader>
@@ -349,7 +349,7 @@ const FormEditor = ({ initialData, onSave, isLoading }: FormEditorProps) => {
         />
 
         {/* Action Buttons */}
-        <div className="flex items-center space-x-3 pt-4">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 pt-4 pb-4 lg:pb-0">
           <Button onClick={handleSave} disabled={isLoading} className="flex-1">
             <Save className="h-4 w-4 mr-2" />
             {isLoading ? 'Saving...' : 'Save Form'}
@@ -357,23 +357,29 @@ const FormEditor = ({ initialData, onSave, isLoading }: FormEditorProps) => {
               <span className="ml-1 w-2 h-2 bg-orange-500 rounded-full" />
             )}
           </Button>
-          <Button variant="outline" onClick={() => setShowPreview(true)}>
-            <Eye className="h-4 w-4 mr-2" />
-            Preview
-          </Button>
-          <Button 
-            variant="outline" 
-            onClick={() => setShowShare(true)}
-            disabled={!formData.id}
-          >
-            <Share2 className="h-4 w-4 mr-2" />
-            Share
-          </Button>
+          <div className="flex space-x-2 sm:space-x-3">
+            <Button variant="outline" onClick={() => setShowPreview(true)} className="flex-1 sm:flex-none">
+              <Eye className="h-4 w-4 mr-2" />
+              <span className="sm:inline">Preview</span>
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowShare(true)}
+              disabled={!formData.id}
+              className="flex-1 sm:flex-none"
+            >
+              <Share2 className="h-4 w-4 mr-2" />
+              <span className="sm:inline">Share</span>
+            </Button>
+          </div>
         </div>
       </div>
 
       {/* WhatsApp Preview Panel */}
-      <div className="lg:sticky lg:top-6 lg:h-fit">
+      <div className="lg:sticky lg:top-6 lg:h-fit order-1 lg:order-2">
+        <div className="block lg:hidden mb-4">
+          <h3 className="text-lg font-semibold mb-2">WhatsApp Preview</h3>
+        </div>
         <WhatsAppPreview formData={formData} />
       </div>
 
