@@ -1,20 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Navigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
-import { CalendarIcon, ExternalLink, Loader2 } from 'lucide-react';
+import { CalendarIcon, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { FormData, FormField, FormResponse, generateWhatsAppUrl } from '@/lib/whatsapp';
+import FileUploadField from '@/components/FormBuilder/FileUploadField';
 
 export default function PublicForm() {
   const { id } = useParams<{ id: string }>();
@@ -22,6 +21,7 @@ export default function PublicForm() {
   const [formData, setFormData] = useState<FormData | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const [responses, setResponses] = useState<FormResponse>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -51,7 +51,8 @@ export default function PublicForm() {
           title: data.title,
           description: data.description,
           businessPhone: data.business_phone || '',
-          fields: (data.fields as unknown) as FormField[]
+          fields: (data.fields as unknown) as FormField[],
+          thankYouPage: (data.thank_you_page && typeof data.thank_you_page === 'object') ? data.thank_you_page as any : undefined
         };
         setFormData(form);
       }
@@ -85,37 +86,43 @@ export default function PublicForm() {
     setSubmitting(true);
 
     try {
-      // Save submission to database
-      const { error } = await supabase
+      // Convert responses to JSON-compatible format
+      const submissionData = Object.fromEntries(
+        Object.entries(responses).map(([key, value]) => [
+          key, 
+          value instanceof File ? value.name : value
+        ])
+      );
+
+      // Create form submission record
+      const { error: submissionError } = await supabase
         .from('form_submissions')
         .insert({
           form_id: formData.id!,
-          user_id: formData.id!, // Use form_id as user_id for public submissions
-          submission_data: responses as any
+          user_id: crypto.randomUUID(), // Generate temporary ID for public submissions
+          submission_data: submissionData as any,
         });
 
-      if (error) {
-        console.error('Error saving submission:', error);
+      if (submissionError) {
+        console.error('Submission error:', submissionError);
         toast({
+          title: "Submission failed",
+          description: "There was an error submitting your form. Please try again.",
           variant: "destructive",
-          title: "Error",
-          description: "Failed to submit form. Please try again."
         });
         return;
       }
 
-      // Generate WhatsApp URL and redirect
-      const whatsappUrl = generateWhatsAppUrl(formData, responses);
-      window.open(whatsappUrl, '_blank');
-
+      setSubmitted(true);
+      
       toast({
-        title: "Success!",
-        description: "Form submitted successfully. Opening WhatsApp..."
+        title: "Form submitted successfully!",
+        description: "Opening WhatsApp with your form data...",
       });
 
-      // Reset form
-      setResponses({});
-      setErrors({});
+      // Generate WhatsApp URL and open it
+      const whatsappUrl = generateWhatsAppUrl(formData, responses);
+      window.open(whatsappUrl, '_blank');
     } catch (error) {
       console.error('Error submitting form:', error);
       toast({
@@ -232,18 +239,13 @@ export default function PublicForm() {
             <Label htmlFor={field.id}>
               {field.label} {field.required && <span className="text-destructive">*</span>}
             </Label>
-            <Input
-              id={field.id}
-              type="file"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) {
-                  setResponses(prev => ({ ...prev, [field.id]: file }));
-                }
-              }}
-              className={error ? 'border-destructive' : ''}
+            <FileUploadField
+              fieldId={field.id}
+              value={value as File}
+              onChange={(fieldId, file) => setResponses(prev => ({ ...prev, [fieldId]: file || '' }))}
+              required={field.required}
+              error={error}
             />
-            {error && <p className="text-destructive text-sm">{error}</p>}
           </div>
         );
 
@@ -276,24 +278,68 @@ export default function PublicForm() {
     );
   }
 
+  if (submitted) {
+    const thankYouPage = formData?.thankYouPage;
+    const defaultMessage = `Thank you for your submission! We've received your ${formData?.title?.toLowerCase()} and will get back to you soon via WhatsApp.`;
+    
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="max-w-md w-full mx-auto p-4">
+          <Card className="text-center">
+            <CardContent className="pt-6 space-y-4">
+              <div className="w-16 h-16 mx-auto bg-green-100 rounded-full flex items-center justify-center">
+                <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold text-green-600 mb-2">Form Submitted Successfully!</h2>
+                <p className="text-muted-foreground text-sm">
+                  {thankYouPage?.message || defaultMessage}
+                </p>
+              </div>
+              {thankYouPage?.redirectUrl && (
+                <Button 
+                  onClick={() => window.open(thankYouPage.redirectUrl, '_blank')}
+                  className="mt-4"
+                >
+                  Continue to Website
+                </Button>
+              )}
+              {thankYouPage?.showBranding !== false && (
+                <p className="text-xs text-muted-foreground pt-4 border-t">
+                  Powered by FormBuilder
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-background py-8 px-4">
-      <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen bg-background">
+      <div className="max-w-2xl mx-auto p-4 py-8">
         <Card>
-          <CardHeader>
-            <CardTitle>{formData.title}</CardTitle>
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl">{formData.title}</CardTitle>
             {formData.description && (
-              <CardDescription>{formData.description}</CardDescription>
+              <CardDescription className="text-base">
+                {formData.description}
+              </CardDescription>
             )}
           </CardHeader>
+          
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
               {formData.fields.map(renderField)}
               
-              <Button
-                type="submit"
+              <Button 
+                type="submit" 
+                className="w-full" 
                 disabled={submitting}
-                className="w-full"
+                size="lg"
               >
                 {submitting ? (
                   <>
@@ -302,19 +348,18 @@ export default function PublicForm() {
                   </>
                 ) : (
                   <>
-                    Submit & Open WhatsApp
-                    <ExternalLink className="ml-2 h-4 w-4" />
+                    Send via WhatsApp
                   </>
                 )}
               </Button>
             </form>
           </CardContent>
         </Card>
-
-        {/* Custom Branding for Free Users */}
-        <div className="text-center mt-6">
-          <p className="text-sm text-muted-foreground">
-            Powered by <span className="font-medium">FormBuilder</span>
+        
+        {/* Powered by notice */}
+        <div className="text-center mt-8">
+          <p className="text-xs text-muted-foreground">
+            Powered by FormBuilder
           </p>
         </div>
       </div>

@@ -54,6 +54,7 @@ export type Database = {
           fields: Json | null
           id: string
           is_published: boolean | null
+          thank_you_page: Json | null
           title: string
           updated_at: string
           user_id: string
@@ -65,6 +66,7 @@ export type Database = {
           fields?: Json | null
           id?: string
           is_published?: boolean | null
+          thank_you_page?: Json | null
           title: string
           updated_at?: string
           user_id: string
@@ -76,6 +78,7 @@ export type Database = {
           fields?: Json | null
           id?: string
           is_published?: boolean | null
+          thank_you_page?: Json | null
           title?: string
           updated_at?: string
           user_id?: string

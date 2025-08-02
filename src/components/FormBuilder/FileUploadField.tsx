@@ -1,0 +1,147 @@
+import React, { useCallback, useState } from 'react';
+import { useDropzone } from 'react-dropzone';
+import { Upload, File, X, AlertCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { supabase } from '@/integrations/supabase/client';
+
+interface FileUploadFieldProps {
+  fieldId: string;
+  value?: File;
+  onChange: (fieldId: string, file: File | null) => void;
+  required?: boolean;
+  error?: string;
+}
+
+const FileUploadField = ({ fieldId, value, onChange, required, error }: FileUploadFieldProps) => {
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
+    if (acceptedFiles.length === 0) return;
+
+    const file = acceptedFiles[0];
+    
+    // Check file size (10MB limit)
+    if (file.size > 10 * 1024 * 1024) {
+      setUploadError('File size must be less than 10MB');
+      return;
+    }
+
+    setUploading(true);
+    setUploadError(null);
+
+    try {
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setUploadError('You must be logged in to upload files');
+        return;
+      }
+
+      // Upload file to Supabase Storage
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('form-uploads')
+        .upload(fileName, file);
+
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        setUploadError('Failed to upload file. Please try again.');
+        return;
+      }
+
+      // Create a file reference with the storage path
+      const fileWithPath = Object.assign(file, { storagePath: fileName });
+      onChange(fieldId, fileWithPath);
+      
+    } catch (error) {
+      console.error('Upload error:', error);
+      setUploadError('Failed to upload file. Please try again.');
+    } finally {
+      setUploading(false);
+    }
+  }, [fieldId, onChange]);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    multiple: false,
+    accept: {
+      'application/pdf': ['.pdf'],
+      'application/msword': ['.doc'],
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+      'image/*': ['.jpeg', '.jpg', '.png', '.gif'],
+      'text/plain': ['.txt']
+    }
+  });
+
+  const removeFile = () => {
+    onChange(fieldId, null);
+    setUploadError(null);
+  };
+
+  return (
+    <div className="space-y-2">
+      {!value ? (
+        <div
+          {...getRootProps()}
+          className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
+            isDragActive 
+              ? 'border-primary bg-primary/5' 
+              : 'border-muted-foreground/25 hover:border-primary hover:bg-primary/5'
+          } ${error ? 'border-destructive' : ''}`}
+        >
+          <input {...getInputProps()} />
+          <Upload className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+          {uploading ? (
+            <p className="text-sm text-muted-foreground">Uploading...</p>
+          ) : isDragActive ? (
+            <p className="text-sm text-primary">Drop the file here</p>
+          ) : (
+            <div>
+              <p className="text-sm text-muted-foreground mb-2">
+                Drag & drop a file here, or click to select
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Supports PDF, DOC, DOCX, images, and text files (max 10MB)
+              </p>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="border rounded-lg p-4 bg-muted/20">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <File className="h-8 w-8 text-primary" />
+              <div>
+                <p className="font-medium text-sm">{value.name}</p>
+                <p className="text-xs text-muted-foreground">
+                  {(value.size / 1024 / 1024).toFixed(2)} MB
+                </p>
+              </div>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={removeFile}
+              className="text-destructive hover:text-destructive"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {(error || uploadError) && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error || uploadError}</AlertDescription>
+        </Alert>
+      )}
+    </div>
+  );
+};
+
+export default FileUploadField;

@@ -13,7 +13,10 @@ import FieldEditor from './FieldEditor';
 import WhatsAppPreview from './WhatsAppPreview';
 import FormPreview from './FormPreview';
 import ShareModal from './ShareModal';
-import { Save, Eye, Share2, Globe, Lock } from 'lucide-react';
+import TemplateSelector from './TemplateSelector';
+import ThankYouPageEditor from './ThankYouPageEditor';
+import { Save, Eye, Share2, Globe, Lock, Layout } from 'lucide-react';
+import { FormTemplate } from '@/lib/whatsapp';
 import {
   DndContext,
   closestCenter,
@@ -48,6 +51,8 @@ const FormEditor = ({ initialData, onSave, isLoading }: FormEditorProps) => {
   const [expandedField, setExpandedField] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [showShare, setShowShare] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(!initialData && formData.fields.length === 0);
+  const [expandedThankYou, setExpandedThankYou] = useState(false);
   const [lastSavedData, setLastSavedData] = useState<FormData | null>(initialData || null);
   const { toast } = useToast();
 
@@ -183,8 +188,29 @@ const FormEditor = ({ initialData, onSave, isLoading }: FormEditorProps) => {
     }
   };
 
+  const handleSelectTemplate = (template: FormTemplate) => {
+    const fieldsWithIds = template.fields.map(field => ({
+      ...field,
+      id: generateFieldId()
+    }));
+
+    setFormData(prev => ({
+      ...prev,
+      title: template.defaultTitle,
+      description: template.defaultDescription,
+      fields: fieldsWithIds
+    }));
+    
+    setShowTemplates(false);
+    
+    toast({
+      title: "Template applied",
+      description: `${template.name} template has been applied to your form.`,
+    });
+  };
+
   return (
-    <div className="grid lg:grid-cols-2 gap-6 h-full">
+    <div className="grid lg:grid-cols-2 gap-6 h-full">{/* ... keep existing code */}
       {/* Form Editor Panel */}
       <div className="space-y-6">
         {/* Form Settings */}
@@ -285,7 +311,6 @@ const FormEditor = ({ initialData, onSave, isLoading }: FormEditorProps) => {
                   onToggleExpanded={() => setExpandedField(
                     expandedField === field.id ? null : field.id
                   )}
-                  allFields={formData.fields}
                 />
               ))}
             </SortableContext>
@@ -298,8 +323,30 @@ const FormEditor = ({ initialData, onSave, isLoading }: FormEditorProps) => {
           )}
         </div>
 
+        {/* Template Selector Button */}
+        {formData.fields.length > 0 && (
+          <div className="flex justify-center">
+            <Button 
+              variant="outline" 
+              onClick={() => setShowTemplates(true)}
+              className="w-full"
+            >
+              <Layout className="h-4 w-4 mr-2" />
+              Choose Different Template
+            </Button>
+          </div>
+        )}
+
         {/* Add Field Section */}
         <FieldSelector onAddField={handleAddField} />
+
+        {/* Thank You Page Editor */}
+        <ThankYouPageEditor
+          formData={formData}
+          onUpdate={setFormData}
+          isExpanded={expandedThankYou}
+          onToggleExpanded={() => setExpandedThankYou(!expandedThankYou)}
+        />
 
         {/* Action Buttons */}
         <div className="flex items-center space-x-3 pt-4">
@@ -331,6 +378,11 @@ const FormEditor = ({ initialData, onSave, isLoading }: FormEditorProps) => {
       </div>
 
       {/* Modals */}
+      <TemplateSelector
+        isOpen={showTemplates}
+        onClose={() => setShowTemplates(false)}
+        onSelectTemplate={handleSelectTemplate}
+      />
       <FormPreview 
         isOpen={showPreview} 
         onClose={() => setShowPreview(false)} 
