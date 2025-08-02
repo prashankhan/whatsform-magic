@@ -139,6 +139,33 @@ export type Database = {
         }
         Relationships: []
       }
+      submission_rate_limits: {
+        Row: {
+          created_at: string | null
+          form_id: string
+          id: string
+          ip_address: unknown
+          submission_count: number | null
+          window_start: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          form_id: string
+          id?: string
+          ip_address: unknown
+          submission_count?: number | null
+          window_start?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          form_id?: string
+          id?: string
+          ip_address?: unknown
+          submission_count?: number | null
+          window_start?: string | null
+        }
+        Relationships: []
+      }
       subscribers: {
         Row: {
           created_at: string
@@ -225,6 +252,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_submission_rate_limit: {
+        Args: {
+          client_ip: unknown
+          target_form_id: string
+          max_submissions?: number
+          window_minutes?: number
+        }
+        Returns: boolean
+      }
       is_form_published: {
         Args: { form_uuid: string }
         Returns: boolean

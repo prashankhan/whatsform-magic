@@ -19,6 +19,69 @@ interface WebhookPayload {
   data: Record<string, any>;
 }
 
+// Security validation functions
+function validateWebhookUrl(url: string): boolean {
+  if (!url) return false;
+
+  try {
+    const parsedUrl = new URL(url);
+    
+    // Only allow HTTPS for security
+    if (parsedUrl.protocol !== 'https:') {
+      return false;
+    }
+
+    // Prevent localhost and private IP ranges
+    const hostname = parsedUrl.hostname.toLowerCase();
+    
+    // Block localhost variations
+    if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1') {
+      return false;
+    }
+
+    // Block private IP ranges (basic check)
+    if (hostname.startsWith('192.168.') || 
+        hostname.startsWith('10.') || 
+        hostname.match(/^172\.(1[6-9]|2[0-9]|3[0-1])\./)) {
+      return false;
+    }
+
+    // Block metadata endpoints
+    if (hostname.includes('metadata.google') || 
+        hostname.includes('169.254.169.254') ||
+        hostname.includes('metadata.azure') ||
+        hostname.includes('metadata.ec2')) {
+      return false;
+    }
+
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function sanitizeHeaders(headers: Record<string, string>): Record<string, string> {
+  const sanitized: Record<string, string> = {};
+  const maxHeaderValue = 1000; // Limit header value length
+  
+  for (const [key, value] of Object.entries(headers)) {
+    // Skip dangerous headers
+    const lowerKey = key.toLowerCase();
+    if (lowerKey === 'host' || lowerKey.startsWith('x-forwarded') || lowerKey === 'via') {
+      continue;
+    }
+    
+    // Sanitize value
+    const sanitizedValue = typeof value === 'string' 
+      ? value.substring(0, maxHeaderValue).replace(/[\r\n]/g, '') 
+      : '';
+      
+    sanitized[key] = sanitizedValue;
+  }
+  
+  return sanitized;
+}
+
 async function deliverWebhook(
   webhookUrl: string,
   method: string,
@@ -180,6 +243,18 @@ serve(async (req) => {
       );
     }
 
+    // Security validation for webhook URL
+    if (!validateWebhookUrl(form.webhook_url)) {
+      console.error('[WEBHOOK-DELIVERY] Invalid or unsafe webhook URL:', form.webhook_url);
+      return new Response(
+        JSON.stringify({ error: 'Invalid webhook URL - security policy violation' }), 
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
     // Get submission data
     const { data: submission, error: submissionError } = await supabase
       .from('form_submissions')
@@ -217,11 +292,14 @@ serve(async (req) => {
       data: transformedData
     };
 
+    // Sanitize headers for security
+    const sanitizedHeaders = sanitizeHeaders(form.webhook_headers || {});
+
     // Deliver webhook
     const result = await deliverWebhook(
       form.webhook_url,
       form.webhook_method || 'POST',
-      form.webhook_headers || {},
+      sanitizedHeaders,
       payload,
       submission_id,
       form_id

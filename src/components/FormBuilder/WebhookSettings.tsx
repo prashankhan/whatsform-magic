@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Webhook, TestTube } from "lucide-react";
 import { toast } from "sonner";
+import { SecurityValidator } from "@/utils/security";
 
 interface WebhookConfig {
   webhook_enabled: boolean;
@@ -56,6 +57,12 @@ export function WebhookSettings({ webhookConfig, onUpdate }: WebhookSettingsProp
   const testWebhook = async () => {
     if (!webhookConfig.webhook_url) {
       toast.error("Please enter a webhook URL first");
+      return;
+    }
+
+    // Security validation before testing
+    if (!SecurityValidator.validateWebhookUrl(webhookConfig.webhook_url)) {
+      toast.error("Invalid webhook URL. Please use HTTPS and avoid localhost/private IPs.");
       return;
     }
 

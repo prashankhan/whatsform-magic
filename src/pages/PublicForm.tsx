@@ -16,6 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { FormData, FormField, FormResponse, FormOption, generateWhatsAppUrl } from '@/lib/whatsapp';
 import FileUploadField from '@/components/FormBuilder/FileUploadField';
+import { SecurityValidator } from '@/utils/security';
 
 export default function PublicForm() {
   const { id } = useParams<{ id: string }>();
@@ -78,10 +79,21 @@ export default function PublicForm() {
     const newErrors: Record<string, string> = {};
 
     formData?.fields.forEach((field) => {
+      const response = responses[field.id];
+      
+      // Check required fields
       if (field.required) {
-        const response = responses[field.id];
         if (!response || (Array.isArray(response) && response.length === 0)) {
           newErrors[field.id] = `${field.label} is required`;
+          return;
+        }
+      }
+
+      // Security validation for non-empty fields
+      if (response !== undefined && response !== null && response !== '') {
+        const validation = SecurityValidator.validateFormField(response, field.type);
+        if (!validation.valid) {
+          newErrors[field.id] = validation.error || 'Invalid input';
         }
       }
     });
@@ -99,23 +111,51 @@ export default function PublicForm() {
 
     setSubmitting(true);
 
-    // Add debugging for iframe context
-    const isInIframe = window !== window.top;
-    console.log('Form submission context:', {
-      isInIframe,
-      origin: window.location.origin,
-      referrer: document.referrer,
-      userAgent: navigator.userAgent
-    });
-
     try {
-      // Convert responses to JSON-compatible format
-      const submissionData = Object.fromEntries(
-        Object.entries(responses).map(([key, value]) => [
-          key, 
-          value instanceof File ? value.name : value
-        ])
-      );
+      // Security: Rate limiting check
+      const { data: rateLimitCheck } = await supabase.rpc('check_submission_rate_limit', {
+        client_ip: '127.0.0.1', // In production, this would come from server headers
+        target_form_id: formData.id,
+        max_submissions: 10,
+        window_minutes: 60
+      });
+
+      if (!rateLimitCheck) {
+        toast({
+          title: "Too many submissions",
+          description: "Please wait before submitting again.",
+          variant: "destructive",
+        });
+        setSubmitting(false);
+        return;
+      }
+
+      // Security: Sanitize all form responses
+      const sanitizedData: Record<string, any> = {};
+      for (const [fieldId, value] of Object.entries(responses)) {
+        const field = formData.fields.find(f => f.id === fieldId);
+        if (field && value !== undefined && value !== null && value !== '') {
+          if (value instanceof File) {
+            // Validate file uploads
+            const fileValidation = SecurityValidator.validateFileUpload(value);
+            if (!fileValidation.valid) {
+              toast({
+                title: "File validation failed",
+                description: fileValidation.error,
+                variant: "destructive",
+              });
+              setSubmitting(false);
+              return;
+            }
+            sanitizedData[fieldId] = value.name; // Store filename for now
+          } else {
+            const validation = SecurityValidator.validateFormField(value, field.type);
+            if (validation.valid) {
+              sanitizedData[fieldId] = validation.sanitized;
+            }
+          }
+        }
+      }
 
       // Create form submission record (anonymous submissions allowed)
       const { data: submission, error: submissionError } = await supabase
@@ -123,7 +163,7 @@ export default function PublicForm() {
         .insert({
           form_id: formData.id!,
           user_id: null, // Allow anonymous submissions for public forms
-          submission_data: submissionData as any,
+          submission_data: sanitizedData as any,
         })
         .select()
         .single();
@@ -131,7 +171,7 @@ export default function PublicForm() {
       if (submissionError) {
         console.error('Submission error details:', submissionError);
         console.error('Form data:', formData);
-        console.error('Submission data:', submissionData);
+        console.error('Submission data:', sanitizedData);
         toast({
           title: "Submission failed",
           description: `There was an error submitting your form: ${submissionError.message}. Please try again.`,
