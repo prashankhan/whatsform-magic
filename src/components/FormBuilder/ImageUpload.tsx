@@ -137,9 +137,9 @@ const ImageUpload = ({ value, onChange, label, className }: ImageUploadProps) =>
                       <p className="text-xs text-muted-foreground">
                         Drag and drop or click to browse
                       </p>
-                      <p className="text-xs text-muted-foreground">
-                        PNG, JPG, GIF up to 5MB
-                      </p>
+                       <p className="text-xs text-muted-foreground">
+                         PNG, JPG, GIF up to 5MB • Recommended: 400x300px
+                       </p>
                     </>
                   )}
                 </div>

@@ -12,6 +12,7 @@ export interface FormField {
   placeholder?: string;
   required: boolean;
   image?: string; // Optional image for the field itself
+  showImageUpload?: boolean; // Toggle for showing image upload UI
   options?: string[] | FormOption[]; // For multiple-choice and checkbox fields
 }
 
@@ -74,10 +75,6 @@ export const generateWhatsAppMessage = (formData: FormData, responses: FormRespo
         message += `${response}\n\n`;
       }
       
-      // Add field image reference if available
-      if (field.image) {
-        message += `🖼️ Field image: ${field.image}\n\n`;
-      }
     }
   });
 

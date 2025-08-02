@@ -141,12 +141,28 @@ const FieldEditor = ({ field, onUpdate, onDelete, isExpanded, onToggleExpanded }
               </div>
             )}
 
-            {/* Field Image */}
-            <ImageUpload
-              value={field.image}
-              onChange={(imageUrl) => onUpdate({ ...field, image: imageUrl })}
-              label="Field Image (Optional)"
-            />
+            {/* Field Image Toggle */}
+            <div className="flex items-center justify-between">
+              <Label htmlFor={`show-image-${field.id}`}>Add field image</Label>
+              <Switch
+                id={`show-image-${field.id}`}
+                checked={!!field.showImageUpload}
+                onCheckedChange={(checked) => onUpdate({ 
+                  ...field, 
+                  showImageUpload: checked,
+                  image: checked ? field.image : undefined
+                })}
+              />
+            </div>
+
+            {/* Field Image Upload */}
+            {field.showImageUpload && (
+              <ImageUpload
+                value={field.image}
+                onChange={(imageUrl) => onUpdate({ ...field, image: imageUrl })}
+                label="Field Image"
+              />
+            )}
 
             {/* Options (for multiple-choice and checkbox fields) */}
             {(field.type === 'multiple-choice' || field.type === 'checkbox') && (
