@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
 import { FormOption } from '@/lib/whatsapp';
 import { Trash2, Plus } from 'lucide-react';
 import ImageUpload from './ImageUpload';
@@ -83,11 +84,27 @@ const OptionEditor = ({ options, onChange, fieldType }: OptionEditorProps) => {
               </Button>
             </div>
 
-            <ImageUpload
-              value={option.image}
-              onChange={(imageUrl) => updateOption(index, { image: imageUrl })}
-              label={`Option ${index + 1} Image (Optional)`}
-            />
+            {/* Option Image Toggle */}
+            <div className="flex items-center justify-between">
+              <Label htmlFor={`show-option-image-${index}`}>Add option image</Label>
+              <Switch
+                id={`show-option-image-${index}`}
+                checked={!!option.showImageUpload}
+                onCheckedChange={(checked) => updateOption(index, { 
+                  showImageUpload: checked,
+                  image: checked ? option.image : undefined
+                })}
+              />
+            </div>
+
+            {/* Option Image Upload */}
+            {option.showImageUpload && (
+              <ImageUpload
+                value={option.image}
+                onChange={(imageUrl) => updateOption(index, { image: imageUrl })}
+                label={`Option ${index + 1} Image`}
+              />
+            )}
           </CardContent>
         </Card>
       ))}

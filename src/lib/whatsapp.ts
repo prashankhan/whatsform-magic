@@ -3,6 +3,7 @@
 export interface FormOption {
   text: string;
   image?: string;
+  showImageUpload?: boolean;
 }
 
 export interface FormField {
