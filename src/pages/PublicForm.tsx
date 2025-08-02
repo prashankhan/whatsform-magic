@@ -111,10 +111,12 @@ export default function PublicForm() {
         .single();
 
       if (submissionError) {
-        console.error('Submission error:', submissionError);
+        console.error('Submission error details:', submissionError);
+        console.error('Form data:', formData);
+        console.error('Submission data:', submissionData);
         toast({
           title: "Submission failed",
-          description: "There was an error submitting your form. Please try again.",
+          description: `There was an error submitting your form: ${submissionError.message}. Please try again.`,
           variant: "destructive",
         });
         return;
@@ -146,11 +148,15 @@ export default function PublicForm() {
       const whatsappUrl = generateWhatsAppUrl(formData, responses);
       window.open(whatsappUrl, '_blank');
     } catch (error) {
-      console.error('Error submitting form:', error);
+      console.error('Error submitting form - Full error object:', error);
+      console.error('Error message:', error instanceof Error ? error.message : 'Unknown error');
+      console.error('Error stack:', error instanceof Error ? error.stack : 'No stack');
+      console.error('Form data at error:', formData);
+      console.error('Responses at error:', responses);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "An unexpected error occurred. Please try again."
+        description: `An unexpected error occurred: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`
       });
     } finally {
       setSubmitting(false);
