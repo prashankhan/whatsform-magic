@@ -102,6 +102,15 @@ export default function PublicForm() {
 
     setSubmitting(true);
 
+    // Add debugging for iframe context
+    const isInIframe = window !== window.top;
+    console.log('Form submission context:', {
+      isInIframe,
+      origin: window.location.origin,
+      referrer: document.referrer,
+      userAgent: navigator.userAgent
+    });
+
     try {
       // Convert responses to JSON-compatible format
       const submissionData = Object.fromEntries(

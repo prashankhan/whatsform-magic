@@ -151,10 +151,10 @@ serve(async (req) => {
 
     console.log(`[WEBHOOK-DELIVERY] Processing submission ${submission_id} for form ${form_id}`);
 
-    // Get form configuration
+    // Get form configuration with fields for field mapping
     const { data: form, error: formError } = await supabase
       .from('forms')
-      .select('title, webhook_enabled, webhook_url, webhook_method, webhook_headers')
+      .select('title, webhook_enabled, webhook_url, webhook_method, webhook_headers, fields')
       .eq('id', form_id)
       .single();
 
@@ -198,13 +198,23 @@ serve(async (req) => {
       );
     }
 
+    // Transform field IDs to readable labels
+    const transformedData: Record<string, any> = {};
+    const formFields = Array.isArray(form.fields) ? form.fields : [];
+    
+    for (const [fieldId, value] of Object.entries(submission.submission_data)) {
+      const field = formFields.find((f: any) => f.id === fieldId);
+      const fieldLabel = field?.label || fieldId;
+      transformedData[fieldLabel] = value;
+    }
+
     // Prepare webhook payload
     const payload: WebhookPayload = {
       form_id: form_id,
       submission_id: submission_id,
       submitted_at: submission.submitted_at,
       form_title: form.title,
-      data: submission.submission_data
+      data: transformedData
     };
 
     // Deliver webhook
