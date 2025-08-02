@@ -37,7 +37,7 @@ export default function PublicForm() {
     try {
       const { data, error } = await supabase
         .from('forms')
-        .select('*, webhook_enabled, webhook_url, webhook_method, webhook_headers, google_sheets_enabled, google_sheets_spreadsheet_id, google_sheets_worksheet_name')
+        .select('*, webhook_enabled, webhook_url, webhook_method, webhook_headers, google_sheets_enabled, google_sheets_spreadsheet_id, google_sheets_worksheet_name, airtable_enabled, airtable_base_id, airtable_table_name, airtable_api_key')
         .eq('id', formId)
         .eq('is_published', true)
         .single();
@@ -61,7 +61,11 @@ export default function PublicForm() {
           webhook_headers: data.webhook_headers as Record<string, string> || {},
           google_sheets_enabled: data.google_sheets_enabled,
           google_sheets_spreadsheet_id: data.google_sheets_spreadsheet_id,
-          google_sheets_worksheet_name: data.google_sheets_worksheet_name
+          google_sheets_worksheet_name: data.google_sheets_worksheet_name,
+          airtable_enabled: data.airtable_enabled,
+          airtable_base_id: data.airtable_base_id,
+          airtable_table_name: data.airtable_table_name,
+          airtable_api_key: data.airtable_api_key
         };
         console.log('Form loaded with webhook config:', {
           webhook_enabled: form.webhook_enabled,
@@ -185,6 +189,24 @@ export default function PublicForm() {
         }
       } else {
         console.log('Google Sheets integration not triggered - conditions not met');
+      }
+
+      // Trigger Airtable integration if enabled
+      if ((formData as any).airtable_enabled && (formData as any).airtable_base_id && (formData as any).airtable_table_name && (formData as any).airtable_api_key && submission) {
+        console.log('Triggering Airtable integration for submission:', submission.id);
+        try {
+          const result = await supabase.functions.invoke('airtable-delivery', {
+            body: {
+              submissionId: submission.id
+            }
+          });
+          console.log('Airtable integration triggered:', result);
+        } catch (airtableError) {
+          console.error('Error triggering Airtable integration:', airtableError);
+          // Don't show error to user since form was submitted successfully
+        }
+      } else {
+        console.log('Airtable integration not triggered - conditions not met');
       }
 
       setSubmitted(true);

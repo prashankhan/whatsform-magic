@@ -1,151 +1,316 @@
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.53.0';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.53.0'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+}
 
-const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
-const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+interface FormSubmission {
+  id: string;
+  form_id: string;
+  submission_data: Record<string, any>;
+  submitted_at: string;
+}
 
-serve(async (req) => {
+interface Form {
+  id: string;
+  title: string;
+  fields: Array<{
+    id: string;
+    label: string;
+    type: string;
+  }>;
+  google_sheets_enabled: boolean;
+  google_sheets_spreadsheet_id: string;
+  google_sheets_worksheet_name: string;
+}
+
+Deno.serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { submissionId } = await req.json();
-    
-    if (!submissionId) {
-      throw new Error('Submission ID is required');
-    }
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const googleServiceAccountKey = Deno.env.get('GOOGLE_SERVICE_ACCOUNT_KEY');
 
-    console.log(`[GOOGLE-SHEETS] Processing submission ${submissionId}`);
+    if (!googleServiceAccountKey) {
+      console.error('[GOOGLE-SHEETS] Missing Google Service Account Key');
+      return new Response(
+        JSON.stringify({ error: 'Google Service Account not configured' }),
+        { status: 500, headers: corsHeaders }
+      );
+    }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get submission details with form info including API key
+    const { submissionId } = await req.json();
+    console.log('[GOOGLE-SHEETS] Processing submission', submissionId);
+
+    // Fetch submission and form data
     const { data: submission, error: submissionError } = await supabase
       .from('form_submissions')
       .select(`
-        *,
+        id,
+        form_id,
+        submission_data,
+        submitted_at,
         forms!inner(
+          id,
           title,
-          user_id,
+          fields,
           google_sheets_enabled,
           google_sheets_spreadsheet_id,
-          google_sheets_worksheet_name,
-          google_sheets_api_key,
-          fields
+          google_sheets_worksheet_name
         )
       `)
       .eq('id', submissionId)
       .single();
 
-    if (submissionError) {
-      throw new Error(`Failed to fetch submission: ${submissionError.message}`);
-    }
-
-    if (!submission.forms.google_sheets_enabled) {
-      console.log(`[GOOGLE-SHEETS] Google Sheets not enabled for form`);
+    if (submissionError || !submission) {
+      console.error('[GOOGLE-SHEETS] Failed to fetch submission:', submissionError);
       return new Response(
-        JSON.stringify({ success: true, message: 'Google Sheets not enabled' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: 'Submission not found' }),
+        { status: 404, headers: corsHeaders }
       );
     }
 
-    const spreadsheetId = submission.forms.google_sheets_spreadsheet_id;
-    const worksheetName = submission.forms.google_sheets_worksheet_name || 'Sheet1';
-    const apiKey = submission.forms.google_sheets_api_key;
-
-    if (!spreadsheetId) {
-      throw new Error('Google Sheets spreadsheet ID not configured');
+    const form = submission.forms as unknown as Form;
+    
+    if (!form.google_sheets_enabled || !form.google_sheets_spreadsheet_id) {
+      console.log('[GOOGLE-SHEETS] Google Sheets not enabled for this form');
+      return new Response(
+        JSON.stringify({ message: 'Google Sheets not enabled' }),
+        { status: 200, headers: corsHeaders }
+      );
     }
 
-    if (!apiKey) {
-      throw new Error('Google Sheets API key not configured');
-    }
+    console.log(`[GOOGLE-SHEETS] Attempting delivery to spreadsheet ${form.google_sheets_spreadsheet_id}, worksheet ${form.google_sheets_worksheet_name}`);
 
-    console.log(`[GOOGLE-SHEETS] Attempting delivery to spreadsheet ${spreadsheetId}, worksheet ${worksheetName}`);
+    // Parse service account credentials
+    const serviceAccount = JSON.parse(googleServiceAccountKey);
+    
+    // Get access token using service account
+    const accessToken = await getServiceAccountAccessToken(serviceAccount);
+    
+    // Check if sheet exists and get its properties
+    const sheetId = await getOrCreateWorksheet(
+      form.google_sheets_spreadsheet_id,
+      form.google_sheets_worksheet_name || 'Sheet1',
+      accessToken
+    );
 
-    // Prepare the row data
-    const formFields = submission.forms.fields || [];
-    const submissionData = submission.submission_data || {};
-    
-    // Create header row if needed (for first submission)
-    const headers = ['Timestamp', 'Submission ID', ...formFields.map((field: any) => field.label || field.id)];
-    
-    // Create data row
-    const rowData = [
-      new Date(submission.submitted_at).toLocaleString(),
-      submission.id,
-      ...formFields.map((field: any) => {
-        const response = submissionData[field.id];
-        if (Array.isArray(response)) {
-          return response.join(', ');
-        }
-        return response || '';
-      })
-    ];
+    // Prepare the data row
+    const headers = form.fields.map(field => field.label || field.id);
+    const values = form.fields.map(field => {
+      const value = submission.submission_data[field.id];
+      return Array.isArray(value) ? value.join(', ') : String(value || '');
+    });
 
-    // Get current sheet data to check if headers exist
-    const sheetsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${worksheetName}!A1:Z1?key=${apiKey}`;
-    
-    const existingDataResponse = await fetch(sheetsUrl);
-    const existingData = await existingDataResponse.json();
-    
-    let needsHeaders = false;
-    if (!existingData.values || existingData.values.length === 0) {
-      needsHeaders = true;
-    }
+    // Check if headers exist, if not add them
+    await ensureHeaders(
+      form.google_sheets_spreadsheet_id,
+      form.google_sheets_worksheet_name || 'Sheet1',
+      headers,
+      accessToken
+    );
 
-    // Append data to the sheet
-    const appendUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${worksheetName}:append?valueInputOption=RAW&key=${apiKey}`;
-    
-    const valuesToAppend = needsHeaders ? [headers, rowData] : [rowData];
+    // Append the data
+    const appendUrl = `https://sheets.googleapis.com/v4/spreadsheets/${form.google_sheets_spreadsheet_id}/values/${form.google_sheets_worksheet_name || 'Sheet1'}:append?valueInputOption=RAW`;
     
     const appendResponse = await fetch(appendUrl, {
       method: 'POST',
       headers: {
+        'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        values: valuesToAppend
+        values: [values],
       }),
     });
 
     if (!appendResponse.ok) {
       const errorText = await appendResponse.text();
+      console.error('[GOOGLE-SHEETS] Error:', appendResponse.status, '-', errorText);
       throw new Error(`Google Sheets API error: ${appendResponse.status} - ${errorText}`);
     }
 
     const result = await appendResponse.json();
-    console.log(`[GOOGLE-SHEETS] Success: Added ${result.updates?.updatedRows || 0} rows to spreadsheet`);
+    console.log('[GOOGLE-SHEETS] Successfully appended data:', result);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: `Successfully added data to Google Sheets`,
-        updatedRows: result.updates?.updatedRows || 0
+        message: 'Data successfully added to Google Sheets',
+        updatedRange: result.updates?.updatedRange
       }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 200, headers: corsHeaders }
     );
 
   } catch (error) {
     console.error('[GOOGLE-SHEETS] Error:', error.message);
-    
     return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: error.message 
-      }),
-      { 
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
+      JSON.stringify({ error: error.message }),
+      { status: 500, headers: corsHeaders }
     );
   }
 });
+
+async function getServiceAccountAccessToken(serviceAccount: any): Promise<string> {
+  const now = Math.floor(Date.now() / 1000);
+  const expiry = now + 3600; // 1 hour
+
+  const header = {
+    alg: 'RS256',
+    typ: 'JWT',
+  };
+
+  const payload = {
+    iss: serviceAccount.client_email,
+    scope: 'https://www.googleapis.com/auth/spreadsheets',
+    aud: 'https://oauth2.googleapis.com/token',
+    exp: expiry,
+    iat: now,
+  };
+
+  // Create JWT token (simplified - in production, use a proper JWT library)
+  const jwtToken = await createJWT(header, payload, serviceAccount.private_key);
+
+  const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwtToken}`,
+  });
+
+  if (!tokenResponse.ok) {
+    throw new Error(`Token request failed: ${tokenResponse.status}`);
+  }
+
+  const tokenData = await tokenResponse.json();
+  return tokenData.access_token;
+}
+
+async function createJWT(header: any, payload: any, privateKey: string): Promise<string> {
+  // Import the crypto library for JWT creation
+  const encoder = new TextEncoder();
+  
+  const headerB64 = btoa(JSON.stringify(header)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+  const payloadB64 = btoa(JSON.stringify(payload)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+  
+  const data = `${headerB64}.${payloadB64}`;
+  
+  // Import the private key
+  const keyData = privateKey
+    .replace('-----BEGIN PRIVATE KEY-----', '')
+    .replace('-----END PRIVATE KEY-----', '')
+    .replace(/\s/g, '');
+  
+  const keyBuffer = Uint8Array.from(atob(keyData), c => c.charCodeAt(0));
+  
+  const cryptoKey = await crypto.subtle.importKey(
+    'pkcs8',
+    keyBuffer,
+    {
+      name: 'RSASSA-PKCS1-v1_5',
+      hash: 'SHA-256',
+    },
+    false,
+    ['sign']
+  );
+  
+  const signature = await crypto.subtle.sign(
+    'RSASSA-PKCS1-v1_5',
+    cryptoKey,
+    encoder.encode(data)
+  );
+  
+  const signatureB64 = btoa(String.fromCharCode(...new Uint8Array(signature)))
+    .replace(/=/g, '')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_');
+  
+  return `${data}.${signatureB64}`;
+}
+
+async function getOrCreateWorksheet(spreadsheetId: string, worksheetName: string, accessToken: string): Promise<number> {
+  const sheetUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}`;
+  
+  const response = await fetch(sheetUrl, {
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to get spreadsheet info: ${response.status}`);
+  }
+
+  const spreadsheet = await response.json();
+  const sheet = spreadsheet.sheets?.find((s: any) => s.properties.title === worksheetName);
+  
+  if (sheet) {
+    return sheet.properties.sheetId;
+  }
+
+  // Create the worksheet if it doesn't exist
+  const createResponse = await fetch(`${sheetUrl}:batchUpdate`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      requests: [{
+        addSheet: {
+          properties: {
+            title: worksheetName,
+          },
+        },
+      }],
+    }),
+  });
+
+  if (!createResponse.ok) {
+    throw new Error(`Failed to create worksheet: ${createResponse.status}`);
+  }
+
+  const createResult = await createResponse.json();
+  return createResult.replies[0].addSheet.properties.sheetId;
+}
+
+async function ensureHeaders(spreadsheetId: string, worksheetName: string, headers: string[], accessToken: string): Promise<void> {
+  // Check if the first row has data
+  const checkUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${worksheetName}!A1:Z1`;
+  
+  const checkResponse = await fetch(checkUrl, {
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+    },
+  });
+
+  if (checkResponse.ok) {
+    const data = await checkResponse.json();
+    if (data.values && data.values.length > 0 && data.values[0].length > 0) {
+      // Headers already exist
+      return;
+    }
+  }
+
+  // Add headers
+  const updateUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${worksheetName}!A1:append?valueInputOption=RAW`;
+  
+  await fetch(updateUrl, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      values: [headers],
+    }),
+  });
+}
