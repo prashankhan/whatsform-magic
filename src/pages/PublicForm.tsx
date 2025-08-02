@@ -37,7 +37,7 @@ export default function PublicForm() {
     try {
       const { data, error } = await supabase
         .from('forms')
-        .select('*, webhook_enabled, webhook_url')
+        .select('*, webhook_enabled, webhook_url, webhook_method, webhook_headers')
         .eq('id', formId)
         .eq('is_published', true)
         .single();
@@ -54,8 +54,17 @@ export default function PublicForm() {
           description: data.description,
           businessPhone: data.business_phone || '',
           fields: (data.fields as unknown) as FormField[],
-          thankYouPage: (data.thank_you_page && typeof data.thank_you_page === 'object') ? data.thank_you_page as any : undefined
+          thankYouPage: (data.thank_you_page && typeof data.thank_you_page === 'object') ? data.thank_you_page as any : undefined,
+          webhook_enabled: data.webhook_enabled,
+          webhook_url: data.webhook_url,
+          webhook_method: data.webhook_method,
+          webhook_headers: data.webhook_headers as Record<string, string> || {}
         };
+        console.log('Form loaded with webhook config:', {
+          webhook_enabled: form.webhook_enabled,
+          webhook_url: form.webhook_url,
+          form_id: form.id
+        });
         setFormData(form);
       }
     } catch (error) {
@@ -123,18 +132,29 @@ export default function PublicForm() {
       }
 
       // Trigger webhook delivery if enabled
+      console.log('Checking webhook trigger conditions:', {
+        webhook_enabled: (formData as any).webhook_enabled,
+        webhook_url: (formData as any).webhook_url,
+        submission_id: submission?.id,
+        form_id: formData.id
+      });
+      
       if ((formData as any).webhook_enabled && (formData as any).webhook_url && submission) {
+        console.log('Triggering webhook delivery for submission:', submission.id);
         try {
-          await supabase.functions.invoke('webhook-delivery', {
+          const result = await supabase.functions.invoke('webhook-delivery', {
             body: {
               submission_id: submission.id,
               form_id: formData.id
             }
           });
+          console.log('Webhook delivery triggered:', result);
         } catch (webhookError) {
           console.error('Error triggering webhook:', webhookError);
           // Don't show error to user since form was submitted successfully
         }
+      } else {
+        console.log('Webhook not triggered - conditions not met');
       }
 
       setSubmitted(true);
