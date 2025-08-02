@@ -78,6 +78,7 @@ export type Database = {
       }
       forms: {
         Row: {
+          branding: Json | null
           business_phone: string | null
           created_at: string
           description: string | null
@@ -94,6 +95,7 @@ export type Database = {
           webhook_url: string | null
         }
         Insert: {
+          branding?: Json | null
           business_phone?: string | null
           created_at?: string
           description?: string | null
@@ -110,6 +112,7 @@ export type Database = {
           webhook_url?: string | null
         }
         Update: {
+          branding?: Json | null
           business_phone?: string | null
           created_at?: string
           description?: string | null

@@ -18,6 +18,18 @@ export interface FormField {
   content?: string; // For information fields
 }
 
+export interface FormBranding {
+  coverImage?: string;
+  logo?: string;
+  primaryColor?: string;
+  backgroundColor?: string;
+  backgroundImage?: string;
+  removePoweredBy?: boolean;
+  customFavicon?: string;
+  footerText?: string;
+  footerLinks?: Array<{ text: string; url: string }>;
+}
+
 export interface FormData {
   id?: string;
   title: string;
@@ -34,6 +46,7 @@ export interface FormData {
   webhook_url?: string;
   webhook_method?: string;
   webhook_headers?: Record<string, string>;
+  branding?: FormBranding;
 }
 
 export interface FormResponse {

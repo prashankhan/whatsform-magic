@@ -16,6 +16,7 @@ import ShareModal from './ShareModal';
 import TemplateSelector from './TemplateSelector';
 import ThankYouPageEditor from './ThankYouPageEditor';
 import { WebhookSettings } from './WebhookSettings';
+import { BrandingEditor } from './BrandingEditor';
 import { Save, Eye, Share2, Globe, Lock, Layout } from 'lucide-react';
 import { FormTemplate } from '@/lib/whatsapp';
 import {
@@ -287,6 +288,12 @@ const FormEditor = ({ initialData, onSave, isLoading }: FormEditorProps) => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Form Branding */}
+        <BrandingEditor
+          branding={formData.branding}
+          onChange={(branding) => setFormData(prev => ({ ...prev, branding }))}
+        />
 
         {/* Form Fields */}
         <div className="space-y-4">

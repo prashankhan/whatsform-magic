@@ -59,6 +59,9 @@ const FormBuilderContent = () => {
         webhook_headers: (typeof data.webhook_headers === 'object' && data.webhook_headers !== null) 
           ? data.webhook_headers as Record<string, string> 
           : {},
+        branding: (data.branding && typeof data.branding === 'object') 
+          ? data.branding as any 
+          : undefined,
       });
     } catch (error) {
       console.error('Error:', error);
@@ -94,6 +97,7 @@ const FormBuilderContent = () => {
         webhook_url: formData.webhook_url || null,
         webhook_method: formData.webhook_method || 'POST',
         webhook_headers: formData.webhook_headers || {},
+        branding: formData.branding as any || null,
         user_id: user?.id
       };
 

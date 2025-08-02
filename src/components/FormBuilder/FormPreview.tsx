@@ -262,6 +262,11 @@ const FormPreview = ({ isOpen, onClose, formData }: FormPreviewProps) => {
 
   if (!formData.title) return null;
 
+  const brandingStyles = formData.branding ? {
+    '--primary': formData.branding.primaryColor || '#3b82f6',
+    '--background': formData.branding.backgroundColor || '#ffffff',
+  } as React.CSSProperties : {};
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
@@ -269,10 +274,31 @@ const FormPreview = ({ isOpen, onClose, formData }: FormPreviewProps) => {
           <DialogTitle>Form Preview</DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-6">
-          <Card>
+        <div className="space-y-6" style={brandingStyles}>
+          {/* Cover Image */}
+          {formData.branding?.coverImage && (
+            <div className="w-full">
+              <img 
+                src={formData.branding.coverImage} 
+                alt="Cover"
+                className="w-full h-48 object-cover rounded-lg"
+              />
+            </div>
+          )}
+
+          <Card style={{ backgroundColor: formData.branding?.backgroundColor }}>
             <CardHeader>
-              <CardTitle>{formData.title}</CardTitle>
+              {/* Logo */}
+              {formData.branding?.logo && (
+                <div className="mb-4">
+                  <img 
+                    src={formData.branding.logo} 
+                    alt="Logo"
+                    className="h-12 object-contain"
+                  />
+                </div>
+              )}
+              <CardTitle style={{ color: formData.branding?.primaryColor }}>{formData.title}</CardTitle>
               {formData.description && (
                 <p className="text-muted-foreground">{formData.description}</p>
               )}
@@ -282,7 +308,11 @@ const FormPreview = ({ isOpen, onClose, formData }: FormPreviewProps) => {
               
               {formData.fields.length > 0 && (
                 <div className="pt-4">
-                  <Button onClick={handleSubmit} className="w-full">
+                  <Button 
+                    onClick={handleSubmit} 
+                    className="w-full"
+                    style={{ backgroundColor: formData.branding?.primaryColor }}
+                  >
                     <Send className="h-4 w-4 mr-2" />
                     Send via WhatsApp
                   </Button>
@@ -292,6 +322,42 @@ const FormPreview = ({ isOpen, onClose, formData }: FormPreviewProps) => {
               {formData.fields.length === 0 && (
                 <div className="text-center py-8 text-muted-foreground">
                   No fields added yet. Add some fields to see the preview.
+                </div>
+              )}
+
+              {/* Footer Branding */}
+              {(formData.branding?.footerText || formData.branding?.footerLinks?.length) && (
+                <div className="pt-6 border-t">
+                  {formData.branding.footerText && (
+                    <p className="text-xs text-muted-foreground mb-2">
+                      {formData.branding.footerText}
+                    </p>
+                  )}
+                  {formData.branding.footerLinks && formData.branding.footerLinks.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {formData.branding.footerLinks.map((link, index) => (
+                        <a
+                          key={index}
+                          href={link.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs hover:underline"
+                          style={{ color: formData.branding?.primaryColor }}
+                        >
+                          {link.text}
+                        </a>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Powered by WhatsForm (unless removed) */}
+              {!formData.branding?.removePoweredBy && (
+                <div className="pt-2 text-center">
+                  <p className="text-xs text-muted-foreground">
+                    Powered by WhatsForm
+                  </p>
                 </div>
               )}
             </CardContent>
