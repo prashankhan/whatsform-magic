@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import NavBar from '@/components/NavBar';
-import { Plus, FileText, Eye, Edit, Trash2, Crown, CreditCard } from 'lucide-react';
+import { Plus, FileText, Eye, Edit, Trash2, Crown, CreditCard, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { SubscriptionProvider, useSubscription } from '@/hooks/useSubscription';
 
@@ -27,7 +27,7 @@ const DashboardContent = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { subscribed, plan, createCheckout, manageSubscription } = useSubscription();
+  const { subscribed, plan, createCheckout, manageSubscription, checkoutLoading, portalLoading } = useSubscription();
 
   const FREE_FORM_LIMIT = 2;
   const isPro = plan === 'pro' || subscribed;
@@ -160,9 +160,18 @@ const DashboardContent = () => {
 
             {/* Billing Management */}
             {isPro ? (
-              <Button variant="outline" size="sm" onClick={handleManageBilling}>
-                <CreditCard className="h-4 w-4 mr-2" />
-                Manage Billing
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleManageBilling}
+                disabled={portalLoading}
+              >
+                {portalLoading ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <CreditCard className="h-4 w-4 mr-2" />
+                )}
+                {portalLoading ? 'Opening Portal...' : 'Manage Billing'}
               </Button>
             ) : null}
             
@@ -184,9 +193,18 @@ const DashboardContent = () => {
                     Upgrade to Pro for unlimited forms and advanced features
                   </p>
                 </div>
-                <Button variant="outline" size="sm" onClick={handleUpgrade}>
-                  <Crown className="h-4 w-4 mr-2" />
-                  Upgrade to Pro
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleUpgrade}
+                  disabled={checkoutLoading}
+                >
+                  {checkoutLoading ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Crown className="h-4 w-4 mr-2" />
+                  )}
+                  {checkoutLoading ? 'Creating Checkout...' : 'Upgrade to Pro'}
                 </Button>
               </div>
             </CardContent>

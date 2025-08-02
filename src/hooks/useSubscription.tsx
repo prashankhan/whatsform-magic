@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface SubscriptionContextType {
   subscribed: boolean;
@@ -8,6 +9,8 @@ interface SubscriptionContextType {
   subscriptionEnd: string | null;
   plan: string;
   loading: boolean;
+  checkoutLoading: boolean;
+  portalLoading: boolean;
   checkSubscription: () => Promise<void>;
   createCheckout: () => Promise<void>;
   manageSubscription: () => Promise<void>;
@@ -34,6 +37,9 @@ export const SubscriptionProvider = ({ children, user }: SubscriptionProviderPro
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
   const [plan, setPlan] = useState('free');
   const [loading, setLoading] = useState(true);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [portalLoading, setPortalLoading] = useState(false);
+  const { toast } = useToast();
 
   const checkSubscription = async () => {
     if (!user) {
@@ -66,36 +72,96 @@ export const SubscriptionProvider = ({ children, user }: SubscriptionProviderPro
   };
 
   const createCheckout = async () => {
+    if (checkoutLoading) return;
+    
     try {
+      setCheckoutLoading(true);
+      console.log('Starting checkout process...');
+      
       const { data, error } = await supabase.functions.invoke('create-checkout');
       
       if (error) {
         console.error('Error creating checkout:', error);
+        toast({
+          title: "Payment Error",
+          description: error.message || "Failed to create checkout session. Please try again.",
+          variant: "destructive",
+        });
         return;
       }
 
-      if (data.url) {
+      console.log('Checkout response:', data);
+
+      if (data?.url) {
+        console.log('Opening checkout URL:', data.url);
         window.open(data.url, '_blank');
+        toast({
+          title: "Redirecting to Payment",
+          description: "Opening Stripe checkout in a new tab...",
+        });
+      } else {
+        toast({
+          title: "Payment Error",
+          description: "No checkout URL received. Please try again.",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error('Error in createCheckout:', error);
+      toast({
+        title: "Payment Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setCheckoutLoading(false);
     }
   };
 
   const manageSubscription = async () => {
+    if (portalLoading) return;
+    
     try {
+      setPortalLoading(true);
+      console.log('Opening customer portal...');
+      
       const { data, error } = await supabase.functions.invoke('customer-portal');
       
       if (error) {
         console.error('Error opening customer portal:', error);
+        toast({
+          title: "Portal Error",
+          description: error.message || "Failed to open customer portal. Please try again.",
+          variant: "destructive",
+        });
         return;
       }
 
-      if (data.url) {
+      console.log('Customer portal response:', data);
+
+      if (data?.url) {
+        console.log('Opening portal URL:', data.url);
         window.open(data.url, '_blank');
+        toast({
+          title: "Opening Customer Portal",
+          description: "Redirecting to billing management...",
+        });
+      } else {
+        toast({
+          title: "Portal Error",
+          description: "No portal URL received. Please try again.",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error('Error in manageSubscription:', error);
+      toast({
+        title: "Portal Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setPortalLoading(false);
     }
   };
 
@@ -122,6 +188,8 @@ export const SubscriptionProvider = ({ children, user }: SubscriptionProviderPro
     subscriptionEnd,
     plan,
     loading,
+    checkoutLoading,
+    portalLoading,
     checkSubscription,
     createCheckout,
     manageSubscription,
