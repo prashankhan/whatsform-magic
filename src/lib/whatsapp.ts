@@ -2,11 +2,11 @@
 
 export interface FormField {
   id: string;
-  type: 'text' | 'phone' | 'multiple-choice' | 'date' | 'file-upload';
+  type: 'text' | 'textarea' | 'phone' | 'multiple-choice' | 'checkbox' | 'date' | 'file-upload';
   label: string;
   placeholder?: string;
   required: boolean;
-  options?: string[]; // For multiple-choice fields
+  options?: string[]; // For multiple-choice and checkbox fields
 }
 
 export interface FormData {
@@ -97,12 +97,20 @@ export const generateSampleResponses = (fields: FormField[]): FormResponse => {
       case 'text':
         sampleResponses[field.id] = field.label.toLowerCase().includes('name') ? 'John Doe' : 'Sample response';
         break;
+      case 'textarea':
+        sampleResponses[field.id] = 'This is a longer sample response that demonstrates how multi-line text would appear in the WhatsApp message.';
+        break;
       case 'phone':
         sampleResponses[field.id] = '+1 (555) 123-4567';
         break;
       case 'multiple-choice':
         if (field.options && field.options.length > 0) {
           sampleResponses[field.id] = field.options[0];
+        }
+        break;
+      case 'checkbox':
+        if (field.options && field.options.length > 0) {
+          sampleResponses[field.id] = [field.options[0], field.options[1]].filter(Boolean);
         }
         break;
       case 'date':

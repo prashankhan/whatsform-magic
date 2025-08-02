@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Trash2, GripVertical, Settings } from 'lucide-react';
@@ -39,8 +40,10 @@ const FieldEditor = ({ field, onUpdate, onDelete, isExpanded, onToggleExpanded }
   const getFieldTypeLabel = (type: FormField['type']) => {
     switch (type) {
       case 'text': return 'Single-line Text';
+      case 'textarea': return 'Multi-line Text';
       case 'phone': return 'Phone Number';
       case 'multiple-choice': return 'Multiple Choice';
+      case 'checkbox': return 'Checkbox';
       case 'date': return 'Date/Time';
       case 'file-upload': return 'File Upload';
       default: return type;
@@ -105,8 +108,8 @@ const FieldEditor = ({ field, onUpdate, onDelete, isExpanded, onToggleExpanded }
               />
             </div>
 
-            {/* Placeholder (for text and phone fields) */}
-            {(field.type === 'text' || field.type === 'phone') && (
+            {/* Placeholder (for text, textarea, and phone fields) */}
+            {(field.type === 'text' || field.type === 'textarea' || field.type === 'phone') && (
               <div className="space-y-2">
                 <Label htmlFor={`placeholder-${field.id}`}>Placeholder</Label>
                 <Input
@@ -118,13 +121,20 @@ const FieldEditor = ({ field, onUpdate, onDelete, isExpanded, onToggleExpanded }
               </div>
             )}
 
-            {/* Options (for multiple-choice fields) */}
-            {field.type === 'multiple-choice' && (
+            {/* Options (for multiple-choice and checkbox fields) */}
+            {(field.type === 'multiple-choice' || field.type === 'checkbox') && (
               <div className="space-y-2">
-                <Label htmlFor={`options-${field.id}`}>Options (one per line)</Label>
-                <textarea
+                <Label htmlFor={`options-${field.id}`}>
+                  Options (one per line)
+                  {field.type === 'checkbox' && (
+                    <span className="text-sm text-muted-foreground ml-2">
+                      - Users can select multiple
+                    </span>
+                  )}
+                </Label>
+                <Textarea
                   id={`options-${field.id}`}
-                  className="w-full min-h-[100px] p-3 border border-input rounded-md text-sm"
+                  className="min-h-[100px]"
                   value={options}
                   onChange={(e) => handleOptionsChange(e.target.value)}
                   placeholder="Option 1&#10;Option 2&#10;Option 3"

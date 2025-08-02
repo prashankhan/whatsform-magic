@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FormData, FormField, FormResponse, generateWhatsAppUrl } from '@/lib/whatsapp';
 import { Calendar, Upload, Send } from 'lucide-react';
@@ -23,8 +24,19 @@ const FormPreview = ({ isOpen, onClose, formData }: FormPreviewProps) => {
     window.open(whatsappUrl, '_blank');
   };
 
-  const handleFieldChange = (fieldId: string, value: string | File) => {
+  const handleFieldChange = (fieldId: string, value: string | string[] | File) => {
     setResponses(prev => ({ ...prev, [fieldId]: value }));
+  };
+
+  const handleCheckboxChange = (fieldId: string, option: string, checked: boolean) => {
+    setResponses(prev => {
+      const currentValues = (prev[fieldId] as string[]) || [];
+      if (checked) {
+        return { ...prev, [fieldId]: [...currentValues, option] };
+      } else {
+        return { ...prev, [fieldId]: currentValues.filter(v => v !== option) };
+      }
+    });
   };
 
   const renderField = (field: FormField) => {
@@ -43,6 +55,23 @@ const FormPreview = ({ isOpen, onClose, formData }: FormPreviewProps) => {
               onChange={(e) => handleFieldChange(field.id, e.target.value)}
               placeholder={field.placeholder}
               required={field.required}
+            />
+          </div>
+        );
+
+      case 'textarea':
+        return (
+          <div key={field.id} className="space-y-2">
+            <Label htmlFor={field.id}>
+              {field.label} {field.required && <span className="text-destructive">*</span>}
+            </Label>
+            <Textarea
+              id={field.id}
+              value={value}
+              onChange={(e) => handleFieldChange(field.id, e.target.value)}
+              placeholder={field.placeholder}
+              required={field.required}
+              className="min-h-[100px]"
             />
           </div>
         );
@@ -81,6 +110,31 @@ const FormPreview = ({ isOpen, onClose, formData }: FormPreviewProps) => {
                 </div>
               ))}
             </RadioGroup>
+          </div>
+        );
+
+      case 'checkbox':
+        const checkboxValues = (responses[field.id] as string[]) || [];
+        return (
+          <div key={field.id} className="space-y-3">
+            <Label>
+              {field.label} {field.required && <span className="text-destructive">*</span>}
+              <span className="text-sm text-muted-foreground ml-2">(Select multiple)</span>
+            </Label>
+            <div className="space-y-2">
+              {field.options?.map((option, index) => (
+                <div key={index} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`${field.id}-${index}`}
+                    checked={checkboxValues.includes(option)}
+                    onCheckedChange={(checked) => 
+                      handleCheckboxChange(field.id, option, checked as boolean)
+                    }
+                  />
+                  <Label htmlFor={`${field.id}-${index}`}>{option}</Label>
+                </div>
+              ))}
+            </div>
           </div>
         );
 

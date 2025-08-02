@@ -3,8 +3,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
   Type, 
+  AlignLeft,
   Phone, 
-  CheckSquare, 
+  CheckSquare,
+  Square,
   Calendar, 
   Upload,
   Plus
@@ -24,6 +26,13 @@ const fieldTypes = [
     color: 'text-blue-600'
   },
   {
+    type: 'textarea' as const,
+    label: 'Multi-line Text',
+    description: 'Large text area for descriptions',
+    icon: AlignLeft,
+    color: 'text-indigo-600'
+  },
+  {
     type: 'phone' as const,
     label: 'Phone Number',
     description: 'Formatted phone number input',
@@ -36,6 +45,13 @@ const fieldTypes = [
     description: 'Single select from options',
     icon: CheckSquare,
     color: 'text-purple-600'
+  },
+  {
+    type: 'checkbox' as const,
+    label: 'Checkbox',
+    description: 'Multiple select from options',
+    icon: Square,
+    color: 'text-pink-600'
   },
   {
     type: 'date' as const,
