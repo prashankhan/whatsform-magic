@@ -197,7 +197,28 @@ export default function PublicForm() {
       
       if (whatsappUrl && whatsappUrl.startsWith('https://wa.me/')) {
         console.log('Opening WhatsApp URL...');
-        window.open(whatsappUrl, '_blank');
+        
+        // Check if we're in an iframe context
+        const isInIframe = window !== window.top;
+        
+        if (isInIframe) {
+          try {
+            // Try to open in parent window for iframe context
+            if (window.top) {
+              window.top.open(whatsappUrl, '_blank');
+            } else {
+              // Fallback: redirect current iframe
+              window.location.href = whatsappUrl;
+            }
+          } catch (error) {
+            console.warn('Could not open in parent window, trying fallback:', error);
+            // Final fallback: redirect current window
+            window.location.href = whatsappUrl;
+          }
+        } else {
+          // Normal browser context
+          window.open(whatsappUrl, '_blank');
+        }
       } else {
         console.error('Invalid WhatsApp URL generated:', whatsappUrl);
         toast({
