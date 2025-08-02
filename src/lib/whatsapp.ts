@@ -34,6 +34,9 @@ export interface FormData {
   webhook_url?: string;
   webhook_method?: string;
   webhook_headers?: Record<string, string>;
+  google_sheets_enabled?: boolean;
+  google_sheets_spreadsheet_id?: string;
+  google_sheets_worksheet_name?: string;
 }
 
 export interface FormResponse {

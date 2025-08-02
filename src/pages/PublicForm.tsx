@@ -37,7 +37,7 @@ export default function PublicForm() {
     try {
       const { data, error } = await supabase
         .from('forms')
-        .select('*, webhook_enabled, webhook_url, webhook_method, webhook_headers')
+        .select('*, webhook_enabled, webhook_url, webhook_method, webhook_headers, google_sheets_enabled, google_sheets_spreadsheet_id, google_sheets_worksheet_name')
         .eq('id', formId)
         .eq('is_published', true)
         .single();
@@ -58,7 +58,10 @@ export default function PublicForm() {
           webhook_enabled: data.webhook_enabled,
           webhook_url: data.webhook_url,
           webhook_method: data.webhook_method,
-          webhook_headers: data.webhook_headers as Record<string, string> || {}
+          webhook_headers: data.webhook_headers as Record<string, string> || {},
+          google_sheets_enabled: data.google_sheets_enabled,
+          google_sheets_spreadsheet_id: data.google_sheets_spreadsheet_id,
+          google_sheets_worksheet_name: data.google_sheets_worksheet_name
         };
         console.log('Form loaded with webhook config:', {
           webhook_enabled: form.webhook_enabled,
@@ -155,6 +158,24 @@ export default function PublicForm() {
         }
       } else {
         console.log('Webhook not triggered - conditions not met');
+      }
+
+      // Trigger Google Sheets integration if enabled
+      if ((formData as any).google_sheets_enabled && (formData as any).google_sheets_spreadsheet_id && submission) {
+        console.log('Triggering Google Sheets integration for submission:', submission.id);
+        try {
+          const result = await supabase.functions.invoke('google-sheets-delivery', {
+            body: {
+              submissionId: submission.id
+            }
+          });
+          console.log('Google Sheets integration triggered:', result);
+        } catch (sheetsError) {
+          console.error('Error triggering Google Sheets integration:', sheetsError);
+          // Don't show error to user since form was submitted successfully
+        }
+      } else {
+        console.log('Google Sheets integration not triggered - conditions not met');
       }
 
       setSubmitted(true);

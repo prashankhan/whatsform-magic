@@ -16,6 +16,7 @@ import ShareModal from './ShareModal';
 import TemplateSelector from './TemplateSelector';
 import ThankYouPageEditor from './ThankYouPageEditor';
 import { WebhookSettings } from './WebhookSettings';
+import GoogleSheetsSettings from './GoogleSheetsSettings';
 import { Save, Eye, Share2, Globe, Lock, Layout } from 'lucide-react';
 import { FormTemplate } from '@/lib/whatsapp';
 import {
@@ -51,6 +52,9 @@ const FormEditor = ({ initialData, onSave, isLoading }: FormEditorProps) => {
     webhook_url: '',
     webhook_method: 'POST',
     webhook_headers: {},
+    google_sheets_enabled: false,
+    google_sheets_spreadsheet_id: '',
+    google_sheets_worksheet_name: 'Sheet1',
     ...initialData
   });
   const [expandedField, setExpandedField] = useState<string | null>(null);
@@ -368,6 +372,23 @@ const FormEditor = ({ initialData, onSave, isLoading }: FormEditorProps) => {
               webhook_url: config.webhook_url,
               webhook_method: config.webhook_method,
               webhook_headers: config.webhook_headers
+            }))
+          }
+        />
+
+        {/* Google Sheets Settings */}
+        <GoogleSheetsSettings
+          googleSheetsConfig={{
+            enabled: formData.google_sheets_enabled || false,
+            spreadsheetId: formData.google_sheets_spreadsheet_id || '',
+            worksheetName: formData.google_sheets_worksheet_name || 'Sheet1'
+          }}
+          onUpdate={(config) => 
+            setFormData(prev => ({ 
+              ...prev, 
+              google_sheets_enabled: config.enabled,
+              google_sheets_spreadsheet_id: config.spreadsheetId,
+              google_sheets_worksheet_name: config.worksheetName
             }))
           }
         />
