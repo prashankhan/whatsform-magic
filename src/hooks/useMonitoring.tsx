@@ -179,7 +179,7 @@ export function useMonitoring() {
       list.getEntries().forEach((entry) => {
         if (entry.entryType === 'navigation') {
           const navEntry = entry as PerformanceNavigationTiming;
-          trackPerformance('page_load', navEntry.loadEventEnd - navEntry.navigationStart);
+          trackPerformance('page_load', navEntry.loadEventEnd - navEntry.fetchStart);
         }
       });
     });

@@ -50,11 +50,11 @@ export function useErrorHandler(options: UseErrorHandlerOptions = {}) {
     return { error: errorMessage };
   }, [toast, showToast, logError, context]);
 
-  const handleAsyncError = useCallback(async <T>(
-    asyncFn: () => Promise<T>,
+  const handleAsyncError = useCallback(async (
+    asyncFn: () => Promise<any>,
     customMessage?: string,
     additionalContext?: Record<string, any>
-  ): Promise<{ data?: T; error?: string }> => {
+  ): Promise<{ data?: any; error?: string }> => {
     try {
       const data = await asyncFn();
       return { data };

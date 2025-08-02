@@ -113,19 +113,15 @@ class ErrorLoggerClass {
       
       // Try to save to database
       try {
-        const { error } = await supabase
-          .from('error_logs')
-          .insert(batch);
+        // TODO: Implement after error_logs table migration is run
+        // const { error } = await supabase
+        //   .from('error_logs')
+        //   .insert(batch);
         
-        if (error) {
-          console.error('Failed to save error logs to database:', error);
-          // Put errors back in queue for retry
-          this.queue.unshift(...batch);
-        }
+        // For now, just log to console
+        console.log('Error logs to be stored:', batch);
       } catch (dbError) {
         console.error('Database error while logging:', dbError);
-        // Put errors back in queue for retry
-        this.queue.unshift(...batch);
       }
     } catch (e) {
       console.error('Error processing error log queue:', e);
@@ -142,18 +138,15 @@ class ErrorLoggerClass {
   // Get error statistics for monitoring
   async getErrorStats(hours = 24) {
     try {
-      const { data, error } = await supabase
-        .from('error_logs')
-        .select('error_type, created_at, context')
-        .gte('created_at', new Date(Date.now() - hours * 60 * 60 * 1000).toISOString())
-        .order('created_at', { ascending: false });
+      // TODO: Implement after error_logs table migration is run
+      // const { data, error } = await supabase
+      //   .from('error_logs')
+      //   .select('error_type, created_at, context')
+      //   .gte('created_at', new Date(Date.now() - hours * 60 * 60 * 1000).toISOString())
+      //   .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Failed to fetch error stats:', error);
-        return null;
-      }
-
-      return data;
+      // For now, return empty array
+      return [];
     } catch (e) {
       console.error('Error fetching error stats:', e);
       return null;
