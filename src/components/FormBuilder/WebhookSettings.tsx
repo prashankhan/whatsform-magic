@@ -60,30 +60,27 @@ export function WebhookSettings({ webhookConfig, onUpdate }: WebhookSettingsProp
     }
 
     try {
-      const testPayload = {
-        test: true,
-        timestamp: new Date().toISOString(),
-        sample_data: {
-          field_1: "Sample value",
-          field_2: "Another sample"
+      const { supabase } = await import('@/integrations/supabase/client');
+      
+      const { data, error } = await supabase.functions.invoke('test-webhook', {
+        body: {
+          webhook_url: webhookConfig.webhook_url,
+          webhook_method: webhookConfig.webhook_method,
+          webhook_headers: webhookConfig.webhook_headers
         }
-      };
-
-      const response = await fetch(webhookConfig.webhook_url, {
-        method: webhookConfig.webhook_method,
-        headers: {
-          'Content-Type': 'application/json',
-          ...webhookConfig.webhook_headers
-        },
-        body: JSON.stringify(testPayload)
       });
 
-      if (response.ok) {
-        toast.success(`Webhook test successful! (${response.status})`);
+      if (error) {
+        throw error;
+      }
+
+      if (data.success) {
+        toast.success(`Webhook test successful! (${data.status})`);
       } else {
-        toast.error(`Webhook test failed: ${response.status} ${response.statusText}`);
+        toast.error(`Webhook test failed: ${data.status || 'Unknown error'}`);
       }
     } catch (error) {
+      console.error('Webhook test error:', error);
       toast.error(`Webhook test failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
