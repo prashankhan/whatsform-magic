@@ -73,17 +73,17 @@ serve(async (req) => {
 
     // Prepare the row data
     const formFields = submission.forms.fields || [];
-    const responses = submission.responses || {};
+    const submissionData = submission.submission_data || {};
     
     // Create header row if needed (for first submission)
     const headers = ['Timestamp', 'Submission ID', ...formFields.map((field: any) => field.label || field.id)];
     
     // Create data row
     const rowData = [
-      new Date(submission.created_at).toLocaleString(),
+      new Date(submission.submitted_at).toLocaleString(),
       submission.id,
       ...formFields.map((field: any) => {
-        const response = responses[field.id];
+        const response = submissionData[field.id];
         if (Array.isArray(response)) {
           return response.join(', ');
         }
