@@ -1,6 +1,6 @@
 import React from 'react';
 import { ErrorMonitoringDashboard } from '@/components/ErrorMonitoringDashboard';
-import NavBar from '@/components/NavBar';
+import NavBar from '@/components/NavBar'; // Force refresh
 
 export default function Monitoring() {
   return (
