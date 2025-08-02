@@ -29,7 +29,7 @@ const DashboardContent = () => {
   const [showPricingModal, setShowPricingModal] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { subscribed, plan, manageSubscription, portalLoading } = useSubscription();
+  const { subscribed, plan, manageSubscription, portalLoading, loading: subscriptionLoading } = useSubscription();
 
   const FREE_FORM_LIMIT = 2;
   const isPro = plan === 'pro' || subscribed;
@@ -124,7 +124,7 @@ const DashboardContent = () => {
     manageSubscription();
   };
 
-  if (loading) {
+  if (loading || subscriptionLoading) {
     return (
       <div className="min-h-screen bg-background">
         <NavBar />
@@ -151,10 +151,12 @@ const DashboardContent = () => {
           
           <div className="flex items-center space-x-4">
             {/* Plan indicator */}
-            <Badge variant={isPro ? "default" : "secondary"} className="flex items-center space-x-1">
-              {isPro && <Crown className="h-3 w-3" />}
-              <span>{isPro ? 'Pro Plan' : 'Free Plan'}</span>
-            </Badge>
+            {!subscriptionLoading && (
+              <Badge variant={isPro ? "default" : "secondary"} className="flex items-center space-x-1">
+                {isPro && <Crown className="h-3 w-3" />}
+                <span>{isPro ? 'Pro Plan' : 'Free Plan'}</span>
+              </Badge>
+            )}
 
             
             <Button onClick={handleCreateForm} className="flex items-center space-x-2">
@@ -165,7 +167,7 @@ const DashboardContent = () => {
         </div>
 
         {/* Plan limits info */}
-        {!isPro && (
+        {!subscriptionLoading && !isPro && (
           <Card className="mb-6 border-warning/20 bg-warning/5">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
