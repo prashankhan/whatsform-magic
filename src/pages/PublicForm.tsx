@@ -14,7 +14,7 @@ import { CalendarIcon, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { FormData, FormField, FormResponse, generateWhatsAppUrl } from '@/lib/whatsapp';
+import { FormData, FormField, FormResponse, FormOption, generateWhatsAppUrl } from '@/lib/whatsapp';
 import FileUploadField from '@/components/FormBuilder/FileUploadField';
 
 export default function PublicForm() {
@@ -140,6 +140,20 @@ export default function PublicForm() {
     }
   };
 
+  const renderFieldImage = (field: FormField) => {
+    if (!field.image) return null;
+    
+    return (
+      <div className="mb-3">
+        <img 
+          src={field.image} 
+          alt={`Image for ${field.label}`}
+          className="w-full max-w-md h-48 object-cover rounded-md border"
+        />
+      </div>
+    );
+  };
+
   const renderField = (field: FormField) => {
     const value = responses[field.id];
     const error = errors[field.id];
@@ -151,6 +165,7 @@ export default function PublicForm() {
             <Label htmlFor={field.id}>
               {field.label} {field.required && <span className="text-destructive">*</span>}
             </Label>
+            {renderFieldImage(field)}
             <Input
               id={field.id}
               placeholder={field.placeholder}
@@ -168,6 +183,7 @@ export default function PublicForm() {
             <Label htmlFor={field.id}>
               {field.label} {field.required && <span className="text-destructive">*</span>}
             </Label>
+            {renderFieldImage(field)}
             <Input
               id={field.id}
               type="tel"
@@ -186,16 +202,33 @@ export default function PublicForm() {
             <Label>
               {field.label} {field.required && <span className="text-destructive">*</span>}
             </Label>
+            {renderFieldImage(field)}
             <RadioGroup
               value={value as string || ''}
               onValueChange={(value) => setResponses(prev => ({ ...prev, [field.id]: value }))}
             >
-              {field.options?.map((option) => (
-                <div key={option} className="flex items-center space-x-2">
-                  <RadioGroupItem value={option} id={`${field.id}-${option}`} />
-                  <Label htmlFor={`${field.id}-${option}`}>{option}</Label>
-                </div>
-              ))}
+              <div className="space-y-4">
+                {field.options?.map((option, index) => {
+                  const text = typeof option === 'string' ? option : option.text;
+                  const image = typeof option === 'string' ? undefined : option.image;
+                  
+                  return (
+                    <div key={index} className="space-y-2">
+                      {image && (
+                        <img 
+                          src={image} 
+                          alt={`Image for ${text}`}
+                          className="w-full max-w-xs h-32 object-cover rounded-md border"
+                        />
+                      )}
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value={text} id={`${field.id}-${index}`} />
+                        <Label htmlFor={`${field.id}-${index}`}>{text}</Label>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </RadioGroup>
             {error && <p className="text-destructive text-sm">{error}</p>}
           </div>
@@ -244,6 +277,7 @@ export default function PublicForm() {
             <Label htmlFor={field.id}>
               {field.label} {field.required && <span className="text-destructive">*</span>}
             </Label>
+            {renderFieldImage(field)}
             <Textarea
               id={field.id}
               placeholder={field.placeholder}
@@ -262,30 +296,46 @@ export default function PublicForm() {
             <Label>
               {field.label} {field.required && <span className="text-destructive">*</span>}
             </Label>
-            <div className="space-y-3">
-              {field.options?.map((option) => (
-                <div key={option} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`${field.id}-${option}`}
-                    checked={(value as string[] || []).includes(option)}
-                    onCheckedChange={(checked) => {
-                      const currentValues = (value as string[]) || [];
-                      if (checked) {
-                        setResponses(prev => ({ 
-                          ...prev, 
-                          [field.id]: [...currentValues, option] 
-                        }));
-                      } else {
-                        setResponses(prev => ({ 
-                          ...prev, 
-                          [field.id]: currentValues.filter(v => v !== option) 
-                        }));
-                      }
-                    }}
-                  />
-                  <Label htmlFor={`${field.id}-${option}`}>{option}</Label>
-                </div>
-              ))}
+            {renderFieldImage(field)}
+            <div className="space-y-4">
+              {field.options?.map((option, index) => {
+                const text = typeof option === 'string' ? option : option.text;
+                const image = typeof option === 'string' ? undefined : option.image;
+                const isSelected = (value as string[] || []).includes(text);
+                
+                return (
+                  <div key={index} className="space-y-2">
+                    {image && (
+                      <img 
+                        src={image} 
+                        alt={`Image for ${text}`}
+                        className="w-full max-w-xs h-32 object-cover rounded-md border"
+                      />
+                    )}
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`${field.id}-${index}`}
+                        checked={isSelected}
+                        onCheckedChange={(checked) => {
+                          const currentValues = (value as string[]) || [];
+                          if (checked) {
+                            setResponses(prev => ({ 
+                              ...prev, 
+                              [field.id]: [...currentValues, text] 
+                            }));
+                          } else {
+                            setResponses(prev => ({ 
+                              ...prev, 
+                              [field.id]: currentValues.filter(v => v !== text) 
+                            }));
+                          }
+                        }}
+                      />
+                      <Label htmlFor={`${field.id}-${index}`}>{text}</Label>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
             {error && <p className="text-destructive text-sm">{error}</p>}
           </div>
@@ -297,6 +347,7 @@ export default function PublicForm() {
             <Label htmlFor={field.id}>
               {field.label} {field.required && <span className="text-destructive">*</span>}
             </Label>
+            {renderFieldImage(field)}
             <FileUploadField
               fieldId={field.id}
               value={value as File}

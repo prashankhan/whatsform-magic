@@ -1,12 +1,18 @@
 // WhatsApp message utilities
 
+export interface FormOption {
+  text: string;
+  image?: string;
+}
+
 export interface FormField {
   id: string;
   type: 'text' | 'textarea' | 'phone' | 'multiple-choice' | 'checkbox' | 'date' | 'file-upload';
   label: string;
   placeholder?: string;
   required: boolean;
-  options?: string[]; // For multiple-choice and checkbox fields
+  image?: string; // Optional image for the field itself
+  options?: string[] | FormOption[]; // For multiple-choice and checkbox fields
 }
 
 export interface FormData {
@@ -59,9 +65,18 @@ export const generateWhatsAppMessage = (formData: FormData, responses: FormRespo
           message += `🔗 File uploaded\n\n`;
         }
       } else if (Array.isArray(response)) {
-        message += `${response.join(', ')}\n\n`;
+        // Handle both string arrays and FormOption arrays for responses
+        const responseText = response.map(item => 
+          typeof item === 'string' ? item : item
+        ).join(', ');
+        message += `${responseText}\n\n`;
       } else {
         message += `${response}\n\n`;
+      }
+      
+      // Add field image reference if available
+      if (field.image) {
+        message += `🖼️ Field image: ${field.image}\n\n`;
       }
     }
   });
@@ -105,12 +120,16 @@ export const generateSampleResponses = (fields: FormField[]): FormResponse => {
         break;
       case 'multiple-choice':
         if (field.options && field.options.length > 0) {
-          sampleResponses[field.id] = field.options[0];
+          const firstOption = field.options[0];
+          sampleResponses[field.id] = typeof firstOption === 'string' ? firstOption : firstOption.text;
         }
         break;
       case 'checkbox':
         if (field.options && field.options.length > 0) {
-          sampleResponses[field.id] = [field.options[0], field.options[1]].filter(Boolean);
+          const options = field.options.slice(0, 2);
+          sampleResponses[field.id] = options.map(option => 
+            typeof option === 'string' ? option : option.text
+          ).filter(Boolean);
         }
         break;
       case 'date':

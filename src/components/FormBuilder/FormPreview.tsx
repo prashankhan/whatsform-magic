@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FormData, FormField, FormResponse, generateWhatsAppUrl } from '@/lib/whatsapp';
+import { FormData, FormField, FormResponse, FormOption, generateWhatsAppUrl } from '@/lib/whatsapp';
 import { Calendar, Upload, Send } from 'lucide-react';
 
 interface FormPreviewProps {
@@ -39,6 +39,21 @@ const FormPreview = ({ isOpen, onClose, formData }: FormPreviewProps) => {
     });
   };
 
+  const renderFieldImage = (field: FormField) => {
+    if (!field.image) return null;
+    
+    return (
+      <div className="mb-3">
+        <img 
+          src={field.image} 
+          alt={`Image for ${field.label}`}
+          className="w-full max-w-md h-48 object-cover rounded-md border"
+        />
+      </div>
+    );
+  };
+
+
   const renderField = (field: FormField) => {
     const value = responses[field.id] as string || '';
 
@@ -49,6 +64,7 @@ const FormPreview = ({ isOpen, onClose, formData }: FormPreviewProps) => {
             <Label htmlFor={field.id}>
               {field.label} {field.required && <span className="text-destructive">*</span>}
             </Label>
+            {renderFieldImage(field)}
             <Input
               id={field.id}
               value={value}
@@ -65,6 +81,7 @@ const FormPreview = ({ isOpen, onClose, formData }: FormPreviewProps) => {
             <Label htmlFor={field.id}>
               {field.label} {field.required && <span className="text-destructive">*</span>}
             </Label>
+            {renderFieldImage(field)}
             <Textarea
               id={field.id}
               value={value}
@@ -82,6 +99,7 @@ const FormPreview = ({ isOpen, onClose, formData }: FormPreviewProps) => {
             <Label htmlFor={field.id}>
               {field.label} {field.required && <span className="text-destructive">*</span>}
             </Label>
+            {renderFieldImage(field)}
             <Input
               id={field.id}
               type="tel"
@@ -99,16 +117,33 @@ const FormPreview = ({ isOpen, onClose, formData }: FormPreviewProps) => {
             <Label>
               {field.label} {field.required && <span className="text-destructive">*</span>}
             </Label>
+            {renderFieldImage(field)}
             <RadioGroup
               value={value}
               onValueChange={(value) => handleFieldChange(field.id, value)}
             >
-              {field.options?.map((option, index) => (
-                <div key={index} className="flex items-center space-x-2">
-                  <RadioGroupItem value={option} id={`${field.id}-${index}`} />
-                  <Label htmlFor={`${field.id}-${index}`}>{option}</Label>
-                </div>
-              ))}
+              <div className="space-y-4">
+                {field.options?.map((option, index) => {
+                  const text = typeof option === 'string' ? option : option.text;
+                  const image = typeof option === 'string' ? undefined : option.image;
+                  
+                  return (
+                    <div key={index} className="space-y-2">
+                      {image && (
+                        <img 
+                          src={image} 
+                          alt={`Image for ${text}`}
+                          className="w-full max-w-xs h-32 object-cover rounded-md border"
+                        />
+                      )}
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value={text} id={`${field.id}-${index}`} />
+                        <Label htmlFor={`${field.id}-${index}`}>{text}</Label>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </RadioGroup>
           </div>
         );
@@ -121,19 +156,35 @@ const FormPreview = ({ isOpen, onClose, formData }: FormPreviewProps) => {
               {field.label} {field.required && <span className="text-destructive">*</span>}
               <span className="text-sm text-muted-foreground ml-2">(Select multiple)</span>
             </Label>
-            <div className="space-y-2">
-              {field.options?.map((option, index) => (
-                <div key={index} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`${field.id}-${index}`}
-                    checked={checkboxValues.includes(option)}
-                    onCheckedChange={(checked) => 
-                      handleCheckboxChange(field.id, option, checked as boolean)
-                    }
-                  />
-                  <Label htmlFor={`${field.id}-${index}`}>{option}</Label>
-                </div>
-              ))}
+            {renderFieldImage(field)}
+            <div className="space-y-4">
+              {field.options?.map((option, index) => {
+                const text = typeof option === 'string' ? option : option.text;
+                const image = typeof option === 'string' ? undefined : option.image;
+                const isSelected = checkboxValues.includes(text);
+                
+                return (
+                  <div key={index} className="space-y-2">
+                    {image && (
+                      <img 
+                        src={image} 
+                        alt={`Image for ${text}`}
+                        className="w-full max-w-xs h-32 object-cover rounded-md border"
+                      />
+                    )}
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`${field.id}-${index}`}
+                        checked={isSelected}
+                        onCheckedChange={(checked) => 
+                          handleCheckboxChange(field.id, text, checked as boolean)
+                        }
+                      />
+                      <Label htmlFor={`${field.id}-${index}`}>{text}</Label>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         );
@@ -144,6 +195,7 @@ const FormPreview = ({ isOpen, onClose, formData }: FormPreviewProps) => {
             <Label htmlFor={field.id}>
               {field.label} {field.required && <span className="text-destructive">*</span>}
             </Label>
+            {renderFieldImage(field)}
             <div className="relative">
               <Input
                 id={field.id}
@@ -163,6 +215,7 @@ const FormPreview = ({ isOpen, onClose, formData }: FormPreviewProps) => {
             <Label htmlFor={field.id}>
               {field.label} {field.required && <span className="text-destructive">*</span>}
             </Label>
+            {renderFieldImage(field)}
             <div className="relative">
               <Input
                 id={field.id}

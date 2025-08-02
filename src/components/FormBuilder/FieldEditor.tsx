@@ -7,9 +7,11 @@ import { Switch } from '@/components/ui/switch';
 import { Trash2, GripVertical, Settings } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { FormField } from '@/lib/whatsapp';
+import { FormField, FormOption } from '@/lib/whatsapp';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import ImageUpload from './ImageUpload';
+import OptionEditor from './OptionEditor';
 
 interface FieldEditorProps {
   field: FormField;
@@ -21,6 +23,20 @@ interface FieldEditorProps {
 
 const FieldEditor = ({ field, onUpdate, onDelete, isExpanded, onToggleExpanded }: FieldEditorProps) => {
   const [options, setOptions] = useState(field.options?.join('\n') || '');
+  
+  // Convert legacy string[] options to FormOption[] format
+  const getFormattedOptions = (): FormOption[] => {
+    if (!field.options) return [];
+    if (field.options.length === 0) return [];
+    
+    // Check if it's already FormOption format
+    if (typeof field.options[0] === 'object') {
+      return field.options as FormOption[];
+    }
+    
+    // Convert string[] to FormOption[]
+    return (field.options as string[]).map(text => ({ text }));
+  };
   
   const {
     attributes,
@@ -35,6 +51,10 @@ const FieldEditor = ({ field, onUpdate, onDelete, isExpanded, onToggleExpanded }
     setOptions(value);
     const optionsList = value.split('\n').filter(option => option.trim());
     onUpdate({ ...field, options: optionsList });
+  };
+
+  const handleFormOptionsChange = (newOptions: FormOption[]) => {
+    onUpdate({ ...field, options: newOptions });
   };
 
   const getFieldTypeLabel = (type: FormField['type']) => {
@@ -121,25 +141,20 @@ const FieldEditor = ({ field, onUpdate, onDelete, isExpanded, onToggleExpanded }
               </div>
             )}
 
+            {/* Field Image */}
+            <ImageUpload
+              value={field.image}
+              onChange={(imageUrl) => onUpdate({ ...field, image: imageUrl })}
+              label="Field Image (Optional)"
+            />
+
             {/* Options (for multiple-choice and checkbox fields) */}
             {(field.type === 'multiple-choice' || field.type === 'checkbox') && (
-              <div className="space-y-2">
-                <Label htmlFor={`options-${field.id}`}>
-                  Options (one per line)
-                  {field.type === 'checkbox' && (
-                    <span className="text-sm text-muted-foreground ml-2">
-                      - Users can select multiple
-                    </span>
-                  )}
-                </Label>
-                <Textarea
-                  id={`options-${field.id}`}
-                  className="min-h-[100px]"
-                  value={options}
-                  onChange={(e) => handleOptionsChange(e.target.value)}
-                  placeholder="Option 1&#10;Option 2&#10;Option 3"
-                />
-              </div>
+              <OptionEditor
+                options={getFormattedOptions()}
+                onChange={handleFormOptionsChange}
+                fieldType={field.type}
+              />
             )}
 
             {/* File Upload Settings */}
