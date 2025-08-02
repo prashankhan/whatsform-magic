@@ -5,6 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
@@ -67,8 +69,11 @@ export default function PublicForm() {
     const newErrors: Record<string, string> = {};
 
     formData?.fields.forEach((field) => {
-      if (field.required && !responses[field.id]) {
-        newErrors[field.id] = `${field.label} is required`;
+      if (field.required) {
+        const response = responses[field.id];
+        if (!response || (Array.isArray(response) && response.length === 0)) {
+          newErrors[field.id] = `${field.label} is required`;
+        }
       }
     });
 
@@ -229,6 +234,59 @@ export default function PublicForm() {
                 />
               </PopoverContent>
             </Popover>
+            {error && <p className="text-destructive text-sm">{error}</p>}
+          </div>
+        );
+
+      case 'textarea':
+        return (
+          <div key={field.id} className="space-y-2">
+            <Label htmlFor={field.id}>
+              {field.label} {field.required && <span className="text-destructive">*</span>}
+            </Label>
+            <Textarea
+              id={field.id}
+              placeholder={field.placeholder}
+              value={value as string || ''}
+              onChange={(e) => setResponses(prev => ({ ...prev, [field.id]: e.target.value }))}
+              className={error ? 'border-destructive' : ''}
+              rows={4}
+            />
+            {error && <p className="text-destructive text-sm">{error}</p>}
+          </div>
+        );
+
+      case 'checkbox':
+        return (
+          <div key={field.id} className="space-y-2">
+            <Label>
+              {field.label} {field.required && <span className="text-destructive">*</span>}
+            </Label>
+            <div className="space-y-3">
+              {field.options?.map((option) => (
+                <div key={option} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`${field.id}-${option}`}
+                    checked={(value as string[] || []).includes(option)}
+                    onCheckedChange={(checked) => {
+                      const currentValues = (value as string[]) || [];
+                      if (checked) {
+                        setResponses(prev => ({ 
+                          ...prev, 
+                          [field.id]: [...currentValues, option] 
+                        }));
+                      } else {
+                        setResponses(prev => ({ 
+                          ...prev, 
+                          [field.id]: currentValues.filter(v => v !== option) 
+                        }));
+                      }
+                    }}
+                  />
+                  <Label htmlFor={`${field.id}-${option}`}>{option}</Label>
+                </div>
+              ))}
+            </div>
             {error && <p className="text-destructive text-sm">{error}</p>}
           </div>
         );
