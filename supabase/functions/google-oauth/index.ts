@@ -19,15 +19,35 @@ console.log('[GOOGLE-OAUTH] Environment check:', {
 });
 
 serve(async (req) => {
+  console.log('[GOOGLE-OAUTH] Request received:', {
+    method: req.method,
+    url: req.url
+  });
+
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
     const url = new URL(req.url);
-    const action = url.searchParams.get('action');
+    
+    // Try to get action from query params first (for callback), then from request body
+    let action = url.searchParams.get('action');
+    
+    if (!action && req.method === 'POST') {
+      try {
+        const body = await req.json();
+        action = body.action;
+        console.log('[GOOGLE-OAUTH] Action from body:', action);
+      } catch (e) {
+        console.log('[GOOGLE-OAUTH] Failed to parse request body:', e);
+      }
+    }
+
+    console.log('[GOOGLE-OAUTH] Action determined:', action);
 
     if (!googleClientId || !googleClientSecret) {
+      console.log('[GOOGLE-OAUTH] Missing credentials');
       throw new Error('Google OAuth credentials not configured');
     }
 
