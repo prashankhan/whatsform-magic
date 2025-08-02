@@ -6,7 +6,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { FormData, FormField } from '@/lib/whatsapp';
 import FieldSelector from './FieldSelector';
@@ -18,7 +17,7 @@ import TemplateSelector from './TemplateSelector';
 import ThankYouPageEditor from './ThankYouPageEditor';
 import { WebhookSettings } from './WebhookSettings';
 import { BrandingEditor } from './BrandingEditor';
-import { Save, Eye, Share2, Globe, Lock, Layout, Settings, Palette, Layers } from 'lucide-react';
+import { Save, Eye, Share2, Globe, Lock, Layout } from 'lucide-react';
 import { FormTemplate } from '@/lib/whatsapp';
 import {
   DndContext,
@@ -217,221 +216,194 @@ const FormEditor = ({ initialData, onSave, isLoading }: FormEditorProps) => {
   };
 
   return (
-    <div className="flex flex-col lg:grid lg:grid-cols-2 gap-4 lg:gap-6 h-full min-h-screen lg:min-h-fit">
+    <div className="flex flex-col lg:grid lg:grid-cols-2 gap-4 lg:gap-6 h-full min-h-screen lg:min-h-fit">{/* ... keep existing code */}
       {/* Form Editor Panel */}
       <div className="space-y-4 lg:space-y-6 order-2 lg:order-1">
-        <Tabs defaultValue="setup" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="setup" className="flex items-center space-x-2">
-              <Settings className="h-4 w-4" />
-              <span>Setup</span>
-            </TabsTrigger>
-            <TabsTrigger value="fields" className="flex items-center space-x-2">
-              <Layers className="h-4 w-4" />
-              <span>Fields</span>
-            </TabsTrigger>
-            <TabsTrigger value="settings" className="flex items-center space-x-2">
-              <Palette className="h-4 w-4" />
-              <span>Settings</span>
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="setup" className="space-y-6 mt-6">
-            {/* Form Settings */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Form Settings</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="title">Form Title *</Label>
-                  <Input
-                    id="title"
-                    value={formData.title}
-                    onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                    placeholder="Enter form title"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="description">Description (optional)</Label>
-                  <Textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                    placeholder="Describe what this form is for"
-                    rows={3}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="businessPhone">Business Phone Number *</Label>
-                  <Input
-                    id="businessPhone"
-                    value={formData.businessPhone}
-                    onChange={(e) => setFormData(prev => ({ ...prev, businessPhone: e.target.value }))}
-                    placeholder="+1234567890"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Include country code (e.g., +1 for US, +44 for UK)
-                  </p>
-                </div>
-                
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="space-y-1">
-                    <div className="flex items-center space-x-2">
-                      {formData.isPublished ? (
-                        <Globe className="h-4 w-4 text-green-600" />
-                      ) : (
-                        <Lock className="h-4 w-4 text-muted-foreground" />
-                      )}
-                      <Label htmlFor="publish-toggle" className="text-sm font-medium">
-                        {formData.isPublished ? 'Published' : 'Draft'}
-                      </Label>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {formData.isPublished 
-                        ? 'Your form is live and can be accessed via the public link'
-                        : 'Your form is in draft mode and not publicly accessible'
-                      }
-                    </p>
-                  </div>
-                  <Switch
-                    id="publish-toggle"
-                    checked={formData.isPublished || false}
-                    onCheckedChange={(checked) => 
-                      setFormData(prev => ({ ...prev, isPublished: checked }))
-                    }
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Form Branding */}
-            <BrandingEditor
-              branding={formData.branding}
-              onChange={(branding) => setFormData(prev => ({ ...prev, branding }))}
-            />
-          </TabsContent>
-
-          <TabsContent value="fields" className="space-y-6 mt-6">
-            {/* Form Fields */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">Form Fields</h3>
-                <span className="text-sm text-muted-foreground">
-                  {formData.fields.length} field{formData.fields.length !== 1 ? 's' : ''}
-                </span>
-              </div>
-              
-              <DndContext 
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragEnd={handleDragEnd}
-              >
-                <SortableContext 
-                  items={formData.fields.map(field => field.id)}
-                  strategy={verticalListSortingStrategy}
-                >
-                  {formData.fields.map((field) => (
-                    <FieldEditor
-                      key={field.id}
-                      field={field}
-                      onUpdate={(updatedField) => handleUpdateField(field.id, updatedField)}
-                      onDelete={() => handleDeleteField(field.id)}
-                      isExpanded={expandedField === field.id}
-                      onToggleExpanded={() => setExpandedField(
-                        expandedField === field.id ? null : field.id
-                      )}
-                    />
-                  ))}
-                </SortableContext>
-              </DndContext>
-              
-              {formData.fields.length === 0 && (
-                <div className="text-center p-8 border-2 border-dashed border-muted rounded-lg">
-                  <p className="text-muted-foreground">No fields yet. Add your first field below.</p>
-                </div>
-              )}
+        {/* Form Settings */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Form Settings</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="title">Form Title *</Label>
+              <Input
+                id="title"
+                value={formData.title}
+                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                placeholder="Enter form title"
+              />
             </div>
-
-            {/* Template Selector Button */}
-            {formData.fields.length > 0 && (
-              <div className="flex justify-center">
-                <Button 
-                  variant="outline" 
-                  onClick={() => setShowTemplates(true)}
-                  className="w-full"
-                >
-                  <Layout className="h-4 w-4 mr-2" />
-                  Choose Different Template
-                </Button>
+            
+            <div className="space-y-2">
+              <Label htmlFor="description">Description (optional)</Label>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Describe what this form is for"
+                rows={3}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="businessPhone">Business Phone Number *</Label>
+              <Input
+                id="businessPhone"
+                value={formData.businessPhone}
+                onChange={(e) => setFormData(prev => ({ ...prev, businessPhone: e.target.value }))}
+                placeholder="+1234567890"
+              />
+              <p className="text-xs text-muted-foreground">
+                Include country code (e.g., +1 for US, +44 for UK)
+              </p>
+            </div>
+            
+            <div className="flex items-center justify-between p-4 border rounded-lg">
+              <div className="space-y-1">
+                <div className="flex items-center space-x-2">
+                  {formData.isPublished ? (
+                    <Globe className="h-4 w-4 text-green-600" />
+                  ) : (
+                    <Lock className="h-4 w-4 text-muted-foreground" />
+                  )}
+                  <Label htmlFor="publish-toggle" className="text-sm font-medium">
+                    {formData.isPublished ? 'Published' : 'Draft'}
+                  </Label>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {formData.isPublished 
+                    ? 'Your form is live and can be accessed via the public link'
+                    : 'Your form is in draft mode and not publicly accessible'
+                  }
+                </p>
               </div>
-            )}
-
-            {/* Add Field Section */}
-            <FieldSelector onAddField={handleAddField} />
-          </TabsContent>
-
-          <TabsContent value="settings" className="space-y-6 mt-6">
-            {/* Thank You Page Editor */}
-            <ThankYouPageEditor
-              formData={formData}
-              onUpdate={setFormData}
-              isExpanded={expandedThankYou}
-              onToggleExpanded={() => setExpandedThankYou(!expandedThankYou)}
-            />
-
-            {/* Webhook Settings */}
-            <WebhookSettings
-              webhookConfig={{
-                webhook_enabled: formData.webhook_enabled || false,
-                webhook_url: formData.webhook_url || '',
-                webhook_method: formData.webhook_method || 'POST',
-                webhook_headers: formData.webhook_headers || {}
-              }}
-              onUpdate={(config) => 
-                setFormData(prev => ({ 
-                  ...prev, 
-                  webhook_enabled: config.webhook_enabled,
-                  webhook_url: config.webhook_url,
-                  webhook_method: config.webhook_method,
-                  webhook_headers: config.webhook_headers
-                }))
-              }
-            />
-          </TabsContent>
-        </Tabs>
-
-        {/* Sticky Action Buttons */}
-        <Card className="sticky bottom-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <CardContent className="p-4">
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
-              <Button onClick={handleSave} disabled={isLoading} className="flex-1">
-                <Save className="h-4 w-4 mr-2" />
-                {isLoading ? 'Saving...' : 'Save Form'}
-                {hasUnsavedChanges && (
-                  <span className="ml-1 w-2 h-2 bg-orange-500 rounded-full" />
-                )}
-              </Button>
-              <div className="flex space-x-2 sm:space-x-3">
-                <Button variant="outline" onClick={() => setShowPreview(true)} className="flex-1 sm:flex-none">
-                  <Eye className="h-4 w-4 mr-2" />
-                  <span className="sm:inline">Preview</span>
-                </Button>
-                <Button 
-                  variant="outline" 
-                  onClick={() => setShowShare(true)}
-                  disabled={!formData.id}
-                  className="flex-1 sm:flex-none"
-                >
-                  <Share2 className="h-4 w-4 mr-2" />
-                  <span className="sm:inline">Share</span>
-                </Button>
-              </div>
+              <Switch
+                id="publish-toggle"
+                checked={formData.isPublished || false}
+                onCheckedChange={(checked) => 
+                  setFormData(prev => ({ ...prev, isPublished: checked }))
+                }
+              />
             </div>
           </CardContent>
         </Card>
+
+        {/* Form Branding */}
+        <BrandingEditor
+          branding={formData.branding}
+          onChange={(branding) => setFormData(prev => ({ ...prev, branding }))}
+        />
+
+        {/* Form Fields */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold">Form Fields</h3>
+            <span className="text-sm text-muted-foreground">
+              {formData.fields.length} field{formData.fields.length !== 1 ? 's' : ''}
+            </span>
+          </div>
+          
+          <DndContext 
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext 
+              items={formData.fields.map(field => field.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              {formData.fields.map((field) => (
+                <FieldEditor
+                  key={field.id}
+                  field={field}
+                  onUpdate={(updatedField) => handleUpdateField(field.id, updatedField)}
+                  onDelete={() => handleDeleteField(field.id)}
+                  isExpanded={expandedField === field.id}
+                  onToggleExpanded={() => setExpandedField(
+                    expandedField === field.id ? null : field.id
+                  )}
+                />
+              ))}
+            </SortableContext>
+          </DndContext>
+          
+          {formData.fields.length === 0 && (
+            <div className="text-center p-8 border-2 border-dashed border-muted rounded-lg">
+              <p className="text-muted-foreground">No fields yet. Add your first field below.</p>
+            </div>
+          )}
+        </div>
+
+        {/* Template Selector Button */}
+        {formData.fields.length > 0 && (
+          <div className="flex justify-center">
+            <Button 
+              variant="outline" 
+              onClick={() => setShowTemplates(true)}
+              className="w-full"
+            >
+              <Layout className="h-4 w-4 mr-2" />
+              Choose Different Template
+            </Button>
+          </div>
+        )}
+
+        {/* Add Field Section */}
+        <FieldSelector onAddField={handleAddField} />
+
+        {/* Thank You Page Editor */}
+        <ThankYouPageEditor
+          formData={formData}
+          onUpdate={setFormData}
+          isExpanded={expandedThankYou}
+          onToggleExpanded={() => setExpandedThankYou(!expandedThankYou)}
+        />
+
+        {/* Webhook Settings */}
+        <WebhookSettings
+          webhookConfig={{
+            webhook_enabled: formData.webhook_enabled || false,
+            webhook_url: formData.webhook_url || '',
+            webhook_method: formData.webhook_method || 'POST',
+            webhook_headers: formData.webhook_headers || {}
+          }}
+          onUpdate={(config) => 
+            setFormData(prev => ({ 
+              ...prev, 
+              webhook_enabled: config.webhook_enabled,
+              webhook_url: config.webhook_url,
+              webhook_method: config.webhook_method,
+              webhook_headers: config.webhook_headers
+            }))
+          }
+        />
+
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 pt-4 pb-4 lg:pb-0">
+          <Button onClick={handleSave} disabled={isLoading} className="flex-1">
+            <Save className="h-4 w-4 mr-2" />
+            {isLoading ? 'Saving...' : 'Save Form'}
+            {hasUnsavedChanges && (
+              <span className="ml-1 w-2 h-2 bg-orange-500 rounded-full" />
+            )}
+          </Button>
+          <div className="flex space-x-2 sm:space-x-3">
+            <Button variant="outline" onClick={() => setShowPreview(true)} className="flex-1 sm:flex-none">
+              <Eye className="h-4 w-4 mr-2" />
+              <span className="sm:inline">Preview</span>
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowShare(true)}
+              disabled={!formData.id}
+              className="flex-1 sm:flex-none"
+            >
+              <Share2 className="h-4 w-4 mr-2" />
+              <span className="sm:inline">Share</span>
+            </Button>
+          </div>
+        </div>
       </div>
 
       {/* WhatsApp Preview Panel */}
