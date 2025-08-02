@@ -99,12 +99,12 @@ export default function PublicForm() {
         ])
       );
 
-      // Create form submission record
+      // Create form submission record (anonymous submissions allowed)
       const { data: submission, error: submissionError } = await supabase
         .from('form_submissions')
         .insert({
           form_id: formData.id!,
-          user_id: crypto.randomUUID(), // Generate temporary ID for public submissions
+          user_id: null, // Allow anonymous submissions for public forms
           submission_data: submissionData as any,
         })
         .select()
