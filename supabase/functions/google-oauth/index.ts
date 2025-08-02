@@ -52,10 +52,12 @@ serve(async (req) => {
     }
 
     if (action === 'authorize') {
-      // Generate OAuth authorization URL
-      const redirectUri = `${url.origin}/functions/v1/google-oauth?action=callback`;
+      // Generate OAuth authorization URL - hardcode HTTPS redirect URI
+      const redirectUri = 'https://euayjiyowktjcxbjrugn.supabase.co/functions/v1/google-oauth?action=callback';
       const scope = 'https://www.googleapis.com/auth/spreadsheets';
       const state = url.searchParams.get('state') || crypto.randomUUID();
+      
+      console.log('[GOOGLE-OAUTH] Generated redirect URI:', redirectUri);
       
       const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
       authUrl.searchParams.set('client_id', googleClientId);
@@ -65,6 +67,8 @@ serve(async (req) => {
       authUrl.searchParams.set('state', state);
       authUrl.searchParams.set('access_type', 'offline');
       authUrl.searchParams.set('prompt', 'consent');
+
+      console.log('[GOOGLE-OAUTH] Generated auth URL:', authUrl.toString());
 
       return new Response(
         JSON.stringify({ authUrl: authUrl.toString() }),
@@ -81,9 +85,11 @@ serve(async (req) => {
         throw new Error('Authorization code not provided');
       }
 
-      // Exchange code for tokens
+      // Exchange code for tokens - use hardcoded HTTPS redirect URI
       const tokenUrl = 'https://oauth2.googleapis.com/token';
-      const redirectUri = `${url.origin}/functions/v1/google-oauth?action=callback`;
+      const redirectUri = 'https://euayjiyowktjcxbjrugn.supabase.co/functions/v1/google-oauth?action=callback';
+      
+      console.log('[GOOGLE-OAUTH] Token exchange redirect URI:', redirectUri);
       
       const tokenResponse = await fetch(tokenUrl, {
         method: 'POST',
