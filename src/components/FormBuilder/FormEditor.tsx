@@ -285,6 +285,7 @@ const FormEditor = ({ initialData, onSave, isLoading }: FormEditorProps) => {
                   onToggleExpanded={() => setExpandedField(
                     expandedField === field.id ? null : field.id
                   )}
+                  allFields={formData.fields}
                 />
               ))}
             </SortableContext>

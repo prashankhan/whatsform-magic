@@ -1,4 +1,12 @@
 // WhatsApp message utilities
+
+export interface ConditionalLogic {
+  type: 'show' | 'hide' | 'required';
+  sourceFieldId: string;
+  condition: 'equals' | 'contains' | 'not_equals';
+  value: string;
+}
+
 export interface FormField {
   id: string;
   type: 'text' | 'phone' | 'multiple-choice' | 'date' | 'file-upload';
@@ -6,6 +14,7 @@ export interface FormField {
   placeholder?: string;
   required: boolean;
   options?: string[]; // For multiple-choice fields
+  conditionalLogic?: ConditionalLogic[];
 }
 
 export interface FormData {
