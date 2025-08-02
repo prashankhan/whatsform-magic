@@ -310,6 +310,13 @@ export default function PublicForm() {
             </form>
           </CardContent>
         </Card>
+
+        {/* Custom Branding for Free Users */}
+        <div className="text-center mt-6">
+          <p className="text-sm text-muted-foreground">
+            Powered by <span className="font-medium">FormBuilder</span>
+          </p>
+        </div>
       </div>
     </div>
   );

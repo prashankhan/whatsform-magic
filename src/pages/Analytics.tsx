@@ -11,10 +11,13 @@ import { Badge } from '@/components/ui/badge';
 import NavBar from '@/components/NavBar';
 import FormCard from '@/components/Analytics/FormCard';
 import FormAnalyticsView from '@/components/Analytics/FormAnalyticsView';
+import PricingModal from '@/components/PricingModal';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { CalendarDays, TrendingUp, Users, FileText, Download, Search, Filter } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useSubscription, SubscriptionProvider } from '@/hooks/useSubscription';
 import { format } from 'date-fns';
+import { User, Session } from '@supabase/supabase-js';
 
 interface Form {
   id: string;
@@ -42,10 +45,12 @@ interface AnalyticsData {
   averageSubmissionsPerForm: number;
 }
 
-const Analytics = () => {
+const AnalyticsContent = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { subscribed, plan } = useSubscription();
   const [loading, setLoading] = useState(true);
+  const [showPricingModal, setShowPricingModal] = useState(false);
   const [forms, setForms] = useState<Form[]>([]);
   const [submissions, setSubmissions] = useState<FormSubmission[]>([]);
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData>({
@@ -155,6 +160,13 @@ const Analytics = () => {
   };
 
   const exportToCSV = () => {
+    const isPro = plan === 'pro' || subscribed;
+    
+    if (!isPro) {
+      setShowPricingModal(true);
+      return;
+    }
+
     const csvData = filteredSubmissions.map(sub => ({
       'Form Title': sub.forms?.title,
       'Submitted At': format(new Date(sub.submitted_at), 'yyyy-MM-dd HH:mm:ss'),
@@ -351,6 +363,7 @@ const Analytics = () => {
                 form={forms.find(f => f.id === selectedFormForAnalytics)!}
                 submissions={getFormSubmissions(selectedFormForAnalytics)}
                 onBack={handleBackToForms}
+                onUpgradeRequired={() => setShowPricingModal(true)}
               />
             ) : (
               <div className="space-y-6">
@@ -385,8 +398,42 @@ const Analytics = () => {
           </TabsContent>
 
         </Tabs>
+
+        <PricingModal 
+          open={showPricingModal} 
+          onOpenChange={setShowPricingModal} 
+        />
       </div>
     </div>
+  );
+};
+
+const Analytics = () => {
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+
+  useEffect(() => {
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+      }
+    );
+
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  return (
+    <SubscriptionProvider user={user}>
+      <AnalyticsContent />
+    </SubscriptionProvider>
   );
 };
 

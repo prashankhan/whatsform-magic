@@ -8,6 +8,7 @@ import { ArrowLeft, Download, Search, Calendar, FileText, TrendingUp } from 'luc
 import { format } from 'date-fns';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { useToast } from '@/hooks/use-toast';
+import { useSubscription } from '@/hooks/useSubscription';
 
 interface FormSubmission {
   id: string;
@@ -25,10 +26,12 @@ interface FormAnalyticsViewProps {
   };
   submissions: FormSubmission[];
   onBack: () => void;
+  onUpgradeRequired?: () => void;
 }
 
-const FormAnalyticsView = ({ form, submissions, onBack }: FormAnalyticsViewProps) => {
+const FormAnalyticsView = ({ form, submissions, onBack, onUpgradeRequired }: FormAnalyticsViewProps) => {
   const { toast } = useToast();
+  const { subscribed, plan } = useSubscription();
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredSubmissions, setFilteredSubmissions] = useState<FormSubmission[]>([]);
 
@@ -43,6 +46,13 @@ const FormAnalyticsView = ({ form, submissions, onBack }: FormAnalyticsViewProps
   }, [submissions, searchTerm]);
 
   const exportFormData = () => {
+    const isPro = plan === 'pro' || subscribed;
+    
+    if (!isPro) {
+      onUpgradeRequired?.();
+      return;
+    }
+
     if (filteredSubmissions.length === 0) {
       toast({
         title: "No data to export",

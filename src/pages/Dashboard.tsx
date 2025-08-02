@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import NavBar from '@/components/NavBar';
+import PricingModal from '@/components/PricingModal';
 import { Plus, FileText, Eye, Edit, Trash2, Crown, CreditCard, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { SubscriptionProvider, useSubscription } from '@/hooks/useSubscription';
@@ -25,9 +26,10 @@ interface Form {
 const DashboardContent = () => {
   const [forms, setForms] = useState<Form[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showPricingModal, setShowPricingModal] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { subscribed, plan, createCheckout, manageSubscription, checkoutLoading, portalLoading } = useSubscription();
+  const { subscribed, plan, manageSubscription, portalLoading } = useSubscription();
 
   const FREE_FORM_LIMIT = 2;
   const isPro = plan === 'pro' || subscribed;
@@ -81,11 +83,7 @@ const DashboardContent = () => {
 
   const handleCreateForm = () => {
     if (!isPro && forms.length >= FREE_FORM_LIMIT) {
-      toast({
-        title: "Upgrade Required",
-        description: `Free plan is limited to ${FREE_FORM_LIMIT} forms. Upgrade to Pro for unlimited forms.`,
-        variant: "destructive",
-      });
+      setShowPricingModal(true);
       return;
     }
     navigate('/form-builder');
@@ -119,7 +117,7 @@ const DashboardContent = () => {
   };
 
   const handleUpgrade = () => {
-    createCheckout();
+    setShowPricingModal(true);
   };
 
   const handleManageBilling = () => {
@@ -197,14 +195,9 @@ const DashboardContent = () => {
                   variant="outline" 
                   size="sm" 
                   onClick={handleUpgrade}
-                  disabled={checkoutLoading}
                 >
-                  {checkoutLoading ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <Crown className="h-4 w-4 mr-2" />
-                  )}
-                  {checkoutLoading ? 'Creating Checkout...' : 'Upgrade to Pro'}
+                  <Crown className="h-4 w-4 mr-2" />
+                  Upgrade to Pro
                 </Button>
               </div>
             </CardContent>
@@ -285,6 +278,11 @@ const DashboardContent = () => {
             ))}
           </div>
         )}
+
+        <PricingModal 
+          open={showPricingModal} 
+          onOpenChange={setShowPricingModal} 
+        />
       </div>
     </div>
   );
