@@ -52,9 +52,19 @@ export const useGoogleAuth = () => {
     try {
       setStatus(prev => ({ ...prev, loading: true }));
 
-      // Get authorization URL from edge function
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      // Get authorization URL from edge function with user ID
       const { data, error } = await supabase.functions.invoke('google-oauth', {
-        body: { action: 'authorize' },
+        body: { 
+          action: 'authorize',
+          userId: user.id 
+        },
       });
 
       if (error) {
@@ -70,26 +80,9 @@ export const useGoogleAuth = () => {
 
       // Listen for OAuth completion
       const handleMessage = async (event: MessageEvent) => {
-        if (event.data.type === 'GOOGLE_OAUTH_SUCCESS') {
+        if (event.data.type === 'GOOGLE_AUTH_SUCCESS') {
           popup?.close();
           
-          // Store tokens via edge function
-          const { data: { session } } = await supabase.auth.getSession();
-          
-          const { error: storeError } = await supabase.functions.invoke('google-oauth', {
-            body: { 
-              action: 'store-tokens',
-              tokens: event.data.tokens 
-            },
-            headers: {
-              Authorization: `Bearer ${session?.access_token}`,
-            },
-          });
-
-          if (storeError) {
-            throw new Error(storeError.message);
-          }
-
           toast({
             title: "Google Account Connected",
             description: "You can now integrate with Google Sheets",
@@ -97,6 +90,9 @@ export const useGoogleAuth = () => {
 
           await checkGoogleConnection();
           window.removeEventListener('message', handleMessage);
+        } else if (event.data.type === 'GOOGLE_AUTH_ERROR') {
+          popup?.close();
+          throw new Error(event.data.error || 'OAuth failed');
         }
       };
 

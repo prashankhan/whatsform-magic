@@ -52,12 +52,20 @@ serve(async (req) => {
     }
 
     if (action === 'authorize') {
+      // Get user ID from request body and include it in state
+      const { userId } = await req.json();
+      
+      if (!userId) {
+        throw new Error('User ID is required for authorization');
+      }
+      
       // Generate OAuth authorization URL - hardcode HTTPS redirect URI
       const redirectUri = 'https://euayjiyowktjcxbjrugn.supabase.co/functions/v1/google-oauth?action=callback';
       const scope = 'https://www.googleapis.com/auth/spreadsheets';
-      const state = url.searchParams.get('state') || crypto.randomUUID();
+      const state = JSON.stringify({ userId, timestamp: Date.now() });
       
       console.log('[GOOGLE-OAUTH] Generated redirect URI:', redirectUri);
+      console.log('[GOOGLE-OAUTH] State with user ID:', { userId });
       
       const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
       authUrl.searchParams.set('client_id', googleClientId);
@@ -155,22 +163,57 @@ serve(async (req) => {
         throw new Error(`Token exchange failed: ${tokenData.error_description || tokenData.error}`);
       }
 
-      // Redirect back to the app with tokens (for security, we'll store them server-side)
-      const callbackUrl = new URL(`${url.origin}/`);
-      callbackUrl.searchParams.set('google_auth', 'success');
-      callbackUrl.searchParams.set('state', state || '');
+      console.log('[GOOGLE-OAUTH] Token exchange successful');
+
+      // Extract user ID from state
+      let userId;
+      try {
+        const stateData = JSON.parse(state || '{}');
+        userId = stateData.userId;
+        console.log('[GOOGLE-OAUTH] Extracted user ID from state:', userId);
+      } catch (e) {
+        console.error('[GOOGLE-OAUTH] Failed to parse state:', e);
+        throw new Error('Invalid state parameter');
+      }
+
+      if (!userId) {
+        throw new Error('User ID not found in state');
+      }
+
+      // Store tokens directly in database using service role key
+      const supabase = createClient(supabaseUrl, supabaseServiceKey);
       
-      // Store tokens temporarily (in a real app, you'd store these securely)
-      // For now, we'll return them in the response for the frontend to handle
+      // Calculate expiry time
+      const expiresAt = new Date(Date.now() + (tokenData.expires_in * 1000));
+
+      console.log('[GOOGLE-OAUTH] Storing tokens for user:', userId);
+
+      // Update user profile with Google tokens
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          google_access_token: tokenData.access_token,
+          google_refresh_token: tokenData.refresh_token,
+          google_token_expires_at: expiresAt.toISOString(),
+          google_connected_at: new Date().toISOString(),
+        })
+        .eq('user_id', userId);
+
+      if (updateError) {
+        console.error('[GOOGLE-OAUTH] Failed to store tokens:', updateError);
+        throw new Error(`Failed to store tokens: ${updateError.message}`);
+      }
+
+      console.log('[GOOGLE-OAUTH] Tokens stored successfully');
+
+      // Return success to frontend
       return new Response(
         `
         <html>
           <body>
             <script>
-              const tokens = ${JSON.stringify(tokenData)};
-              window.opener.postMessage({ 
-                type: 'GOOGLE_OAUTH_SUCCESS', 
-                tokens: tokens 
+              window.opener?.postMessage({ 
+                type: 'GOOGLE_AUTH_SUCCESS'
               }, '*');
               window.close();
             </script>
@@ -186,48 +229,7 @@ serve(async (req) => {
       );
     }
 
-    if (action === 'store-tokens') {
-      // Store tokens for authenticated user
-      const { tokens } = await req.json();
-      const authHeader = req.headers.get('Authorization');
-      
-      if (!authHeader) {
-        throw new Error('No authorization header');
-      }
-
-      const supabase = createClient(supabaseUrl, supabaseServiceKey);
-      
-      // Verify the user token and get user ID
-      const token = authHeader.replace('Bearer ', '');
-      const { data: { user }, error: userError } = await supabase.auth.getUser(token);
-      
-      if (userError || !user) {
-        throw new Error('Invalid user token');
-      }
-
-      // Calculate expiry time
-      const expiresAt = new Date(Date.now() + (tokens.expires_in * 1000));
-
-      // Update user profile with Google tokens
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({
-          google_access_token: tokens.access_token,
-          google_refresh_token: tokens.refresh_token,
-          google_token_expires_at: expiresAt.toISOString(),
-          google_connected_at: new Date().toISOString(),
-        })
-        .eq('user_id', user.id);
-
-      if (updateError) {
-        throw new Error(`Failed to store tokens: ${updateError.message}`);
-      }
-
-      return new Response(
-        JSON.stringify({ success: true, message: 'Google account connected successfully' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    // Removed store-tokens action - now handled directly in callback
 
     if (action === 'disconnect') {
       // Disconnect Google account
