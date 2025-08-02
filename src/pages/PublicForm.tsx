@@ -38,7 +38,7 @@ export default function PublicForm() {
     try {
       const { data, error } = await supabase
         .from('forms')
-        .select('*, webhook_enabled, webhook_url, webhook_method, webhook_headers')
+        .select('*, webhook_enabled, webhook_url, webhook_method, webhook_headers, branding')
         .eq('id', formId)
         .eq('is_published', true)
         .single();
@@ -60,6 +60,7 @@ export default function PublicForm() {
           webhook_url: data.webhook_url,
           webhook_method: data.webhook_method,
           webhook_headers: data.webhook_headers as Record<string, string> || {},
+          branding: (data.branding as any) || undefined,
         };
         console.log('Form loaded with webhook config:', {
           webhook_enabled: form.webhook_enabled,
@@ -594,10 +595,53 @@ export default function PublicForm() {
     );
   }
 
+  // Apply custom favicon if present
+  useEffect(() => {
+    if (formData?.branding?.customFavicon) {
+      const link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+      if (link) {
+        link.href = formData.branding.customFavicon;
+      } else {
+        const newLink = document.createElement('link');
+        newLink.rel = 'icon';
+        newLink.href = formData.branding.customFavicon;
+        document.getElementsByTagName('head')[0].appendChild(newLink);
+      }
+    }
+  }, [formData?.branding?.customFavicon]);
+
+  const backgroundStyle = formData?.branding?.backgroundImage 
+    ? { backgroundImage: `url(${formData.branding.backgroundImage})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+    : { backgroundColor: formData?.branding?.backgroundColor || undefined };
+
+  const primaryColor = formData?.branding?.primaryColor;
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen" style={backgroundStyle}>
       <div className="max-w-2xl mx-auto p-4 py-8">
-        <Card>
+        {/* Cover Image */}
+        {formData?.branding?.coverImage && (
+          <div className="mb-6">
+            <img 
+              src={formData.branding.coverImage} 
+              alt="Form cover" 
+              className="w-full h-48 object-cover rounded-lg shadow-md"
+            />
+          </div>
+        )}
+
+        <Card className="shadow-lg">
+          {/* Logo */}
+          {formData?.branding?.logo && (
+            <div className="p-6 pb-0 text-center">
+              <img 
+                src={formData.branding.logo} 
+                alt="Logo" 
+                className="h-16 mx-auto object-contain"
+              />
+            </div>
+          )}
+
           <CardHeader className="text-center">
             <CardTitle className="text-2xl">{formData.title}</CardTitle>
             {formData.description && (
@@ -616,6 +660,7 @@ export default function PublicForm() {
                 className="w-full" 
                 disabled={submitting}
                 size="lg"
+                style={primaryColor ? { backgroundColor: primaryColor, borderColor: primaryColor } : undefined}
               >
                 {submitting ? (
                   <>
@@ -632,12 +677,38 @@ export default function PublicForm() {
           </CardContent>
         </Card>
         
-        {/* Powered by notice */}
-        <div className="text-center mt-8">
-          <p className="text-xs text-muted-foreground">
-            Powered by FormBuilder
-          </p>
-        </div>
+        {/* Footer */}
+        {formData?.branding?.footerText && (
+          <div className="text-center mt-6">
+            <p className="text-sm text-muted-foreground mb-2">
+              {formData.branding.footerText}
+            </p>
+            {formData?.branding?.footerLinks && formData.branding.footerLinks.length > 0 && (
+              <div className="flex justify-center space-x-4">
+                {formData.branding.footerLinks.map((link, index) => (
+                  <a 
+                    key={index}
+                    href={link.url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-sm text-primary hover:underline"
+                  >
+                    {link.text}
+                  </a>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+        
+        {/* Powered by notice - only show if not removed */}
+        {!formData?.branding?.removePoweredBy && (
+          <div className="text-center mt-8">
+            <p className="text-xs text-muted-foreground">
+              Powered by WhatsForm
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
