@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { ResponsesTable, type ResponsesTableColumn } from '@/components/ui/responses-table';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Download, Search, Calendar, FileText, TrendingUp } from 'lucide-react';
+import { WebhookDeliveriesTable } from './WebhookDeliveriesTable';
 import { format } from 'date-fns';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { useToast } from '@/hooks/use-toast';
@@ -23,6 +24,7 @@ interface FormAnalyticsViewProps {
     title: string;
     description?: string;
     fields: any;
+    webhook_enabled?: boolean;
   };
   submissions: FormSubmission[];
   onBack: () => void;
@@ -299,6 +301,11 @@ const FormAnalyticsView = ({ form, submissions, onBack, onUpgradeRequired }: For
           />
         </CardContent>
       </Card>
+
+      {/* Webhook Deliveries */}
+      {form?.webhook_enabled && (
+        <WebhookDeliveriesTable formId={form.id} />
+      )}
     </div>
   );
 };

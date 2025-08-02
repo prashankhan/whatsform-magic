@@ -58,6 +58,10 @@ export type Database = {
           title: string
           updated_at: string
           user_id: string
+          webhook_enabled: boolean | null
+          webhook_headers: Json | null
+          webhook_method: string | null
+          webhook_url: string | null
         }
         Insert: {
           business_phone?: string | null
@@ -70,6 +74,10 @@ export type Database = {
           title: string
           updated_at?: string
           user_id: string
+          webhook_enabled?: boolean | null
+          webhook_headers?: Json | null
+          webhook_method?: string | null
+          webhook_url?: string | null
         }
         Update: {
           business_phone?: string | null
@@ -82,6 +90,10 @@ export type Database = {
           title?: string
           updated_at?: string
           user_id?: string
+          webhook_enabled?: boolean | null
+          webhook_headers?: Json | null
+          webhook_method?: string | null
+          webhook_url?: string | null
         }
         Relationships: []
       }
@@ -148,6 +160,51 @@ export type Database = {
           subscription_tier?: string | null
           updated_at?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      webhook_deliveries: {
+        Row: {
+          attempt_count: number | null
+          created_at: string
+          delivered_at: string | null
+          error_message: string | null
+          form_id: string
+          id: string
+          response_body: string | null
+          response_code: number | null
+          status: string
+          submission_id: string
+          updated_at: string
+          webhook_url: string
+        }
+        Insert: {
+          attempt_count?: number | null
+          created_at?: string
+          delivered_at?: string | null
+          error_message?: string | null
+          form_id: string
+          id?: string
+          response_body?: string | null
+          response_code?: number | null
+          status?: string
+          submission_id: string
+          updated_at?: string
+          webhook_url: string
+        }
+        Update: {
+          attempt_count?: number | null
+          created_at?: string
+          delivered_at?: string | null
+          error_message?: string | null
+          form_id?: string
+          id?: string
+          response_body?: string | null
+          response_code?: number | null
+          status?: string
+          submission_id?: string
+          updated_at?: string
+          webhook_url?: string
         }
         Relationships: []
       }

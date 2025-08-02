@@ -37,7 +37,7 @@ export default function PublicForm() {
     try {
       const { data, error } = await supabase
         .from('forms')
-        .select('*')
+        .select('*, webhook_enabled, webhook_url')
         .eq('id', formId)
         .eq('is_published', true)
         .single();
@@ -100,13 +100,15 @@ export default function PublicForm() {
       );
 
       // Create form submission record
-      const { error: submissionError } = await supabase
+      const { data: submission, error: submissionError } = await supabase
         .from('form_submissions')
         .insert({
           form_id: formData.id!,
           user_id: crypto.randomUUID(), // Generate temporary ID for public submissions
           submission_data: submissionData as any,
-        });
+        })
+        .select()
+        .single();
 
       if (submissionError) {
         console.error('Submission error:', submissionError);
@@ -116,6 +118,21 @@ export default function PublicForm() {
           variant: "destructive",
         });
         return;
+      }
+
+      // Trigger webhook delivery if enabled
+      if ((formData as any).webhook_enabled && (formData as any).webhook_url && submission) {
+        try {
+          await supabase.functions.invoke('webhook-delivery', {
+            body: {
+              submission_id: submission.id,
+              form_id: formData.id
+            }
+          });
+        } catch (webhookError) {
+          console.error('Error triggering webhook:', webhookError);
+          // Don't show error to user since form was submitted successfully
+        }
       }
 
       setSubmitted(true);

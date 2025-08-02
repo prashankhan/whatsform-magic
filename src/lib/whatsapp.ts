@@ -30,6 +30,10 @@ export interface FormData {
     redirectUrl?: string;
     showBranding?: boolean;
   };
+  webhook_enabled?: boolean;
+  webhook_url?: string;
+  webhook_method?: string;
+  webhook_headers?: Record<string, string>;
 }
 
 export interface FormResponse {

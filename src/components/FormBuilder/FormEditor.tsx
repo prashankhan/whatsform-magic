@@ -15,6 +15,7 @@ import FormPreview from './FormPreview';
 import ShareModal from './ShareModal';
 import TemplateSelector from './TemplateSelector';
 import ThankYouPageEditor from './ThankYouPageEditor';
+import { WebhookSettings } from './WebhookSettings';
 import { Save, Eye, Share2, Globe, Lock, Layout } from 'lucide-react';
 import { FormTemplate } from '@/lib/whatsapp';
 import {
@@ -46,6 +47,10 @@ const FormEditor = ({ initialData, onSave, isLoading }: FormEditorProps) => {
     businessPhone: '',
     fields: [],
     isPublished: false,
+    webhook_enabled: false,
+    webhook_url: '',
+    webhook_method: 'POST',
+    webhook_headers: {},
     ...initialData
   });
   const [expandedField, setExpandedField] = useState<string | null>(null);
@@ -346,6 +351,25 @@ const FormEditor = ({ initialData, onSave, isLoading }: FormEditorProps) => {
           onUpdate={setFormData}
           isExpanded={expandedThankYou}
           onToggleExpanded={() => setExpandedThankYou(!expandedThankYou)}
+        />
+
+        {/* Webhook Settings */}
+        <WebhookSettings
+          webhookConfig={{
+            webhook_enabled: formData.webhook_enabled || false,
+            webhook_url: formData.webhook_url || '',
+            webhook_method: formData.webhook_method || 'POST',
+            webhook_headers: formData.webhook_headers || {}
+          }}
+          onUpdate={(config) => 
+            setFormData(prev => ({ 
+              ...prev, 
+              webhook_enabled: config.webhook_enabled,
+              webhook_url: config.webhook_url,
+              webhook_method: config.webhook_method,
+              webhook_headers: config.webhook_headers
+            }))
+          }
         />
 
         {/* Action Buttons */}
