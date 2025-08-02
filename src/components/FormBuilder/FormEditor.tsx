@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useToast } from '@/hooks/use-toast';
 import { FormData, FormField } from '@/lib/whatsapp';
 import FieldSelector from './FieldSelector';
@@ -17,7 +18,7 @@ import TemplateSelector from './TemplateSelector';
 import ThankYouPageEditor from './ThankYouPageEditor';
 import { WebhookSettings } from './WebhookSettings';
 import { BrandingEditor } from './BrandingEditor';
-import { Save, Eye, Share2, Globe, Lock, Layout } from 'lucide-react';
+import { Save, Eye, Share2, Globe, Lock, Layout, ChevronDown, ChevronRight } from 'lucide-react';
 import { FormTemplate } from '@/lib/whatsapp';
 import {
   DndContext,
@@ -60,6 +61,12 @@ const FormEditor = ({ initialData, onSave, isLoading }: FormEditorProps) => {
   const [showTemplates, setShowTemplates] = useState(!initialData && formData.fields.length === 0);
   const [expandedThankYou, setExpandedThankYou] = useState(false);
   const [lastSavedData, setLastSavedData] = useState<FormData | null>(initialData || null);
+  
+  // Collapsible section states
+  const [settingsOpen, setSettingsOpen] = useState(true);
+  const [brandingOpen, setBrandingOpen] = useState(false);
+  const [fieldsOpen, setFieldsOpen] = useState(true);
+  const [webhooksOpen, setWebhooksOpen] = useState(false);
   const { toast } = useToast();
 
   // Track unsaved changes against last saved state
@@ -220,137 +227,188 @@ const FormEditor = ({ initialData, onSave, isLoading }: FormEditorProps) => {
       {/* Form Editor Panel */}
       <div className="space-y-4 lg:space-y-6 order-2 lg:order-1">
         {/* Form Settings */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Form Settings</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="title">Form Title *</Label>
-              <Input
-                id="title"
-                value={formData.title}
-                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                placeholder="Enter form title"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="description">Description (optional)</Label>
-              <Textarea
-                id="description"
-                value={formData.description}
-                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="Describe what this form is for"
-                rows={3}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="businessPhone">Business Phone Number *</Label>
-              <Input
-                id="businessPhone"
-                value={formData.businessPhone}
-                onChange={(e) => setFormData(prev => ({ ...prev, businessPhone: e.target.value }))}
-                placeholder="+1234567890"
-              />
-              <p className="text-xs text-muted-foreground">
-                Include country code (e.g., +1 for US, +44 for UK)
-              </p>
-            </div>
-            
-            <div className="flex items-center justify-between p-4 border rounded-lg">
-              <div className="space-y-1">
-                <div className="flex items-center space-x-2">
-                  {formData.isPublished ? (
-                    <Globe className="h-4 w-4 text-green-600" />
+        <Collapsible open={settingsOpen} onOpenChange={setSettingsOpen}>
+          <Card>
+            <CollapsibleTrigger asChild>
+              <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+                <div className="flex items-center justify-between">
+                  <CardTitle>Form Settings</CardTitle>
+                  {settingsOpen ? (
+                    <ChevronDown className="h-4 w-4" />
                   ) : (
-                    <Lock className="h-4 w-4 text-muted-foreground" />
+                    <ChevronRight className="h-4 w-4" />
                   )}
-                  <Label htmlFor="publish-toggle" className="text-sm font-medium">
-                    {formData.isPublished ? 'Published' : 'Draft'}
-                  </Label>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  {formData.isPublished 
-                    ? 'Your form is live and can be accessed via the public link'
-                    : 'Your form is in draft mode and not publicly accessible'
-                  }
-                </p>
-              </div>
-              <Switch
-                id="publish-toggle"
-                checked={formData.isPublished || false}
-                onCheckedChange={(checked) => 
-                  setFormData(prev => ({ ...prev, isPublished: checked }))
-                }
-              />
-            </div>
-          </CardContent>
-        </Card>
+              </CardHeader>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="title">Form Title *</Label>
+                  <Input
+                    id="title"
+                    value={formData.title}
+                    onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                    placeholder="Enter form title"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="description">Description (optional)</Label>
+                  <Textarea
+                    id="description"
+                    value={formData.description}
+                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                    placeholder="Describe what this form is for"
+                    rows={3}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="businessPhone">Business Phone Number *</Label>
+                  <Input
+                    id="businessPhone"
+                    value={formData.businessPhone}
+                    onChange={(e) => setFormData(prev => ({ ...prev, businessPhone: e.target.value }))}
+                    placeholder="+1234567890"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Include country code (e.g., +1 for US, +44 for UK)
+                  </p>
+                </div>
+                
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="space-y-1">
+                    <div className="flex items-center space-x-2">
+                      {formData.isPublished ? (
+                        <Globe className="h-4 w-4 text-green-600" />
+                      ) : (
+                        <Lock className="h-4 w-4 text-muted-foreground" />
+                      )}
+                      <Label htmlFor="publish-toggle" className="text-sm font-medium">
+                        {formData.isPublished ? 'Published' : 'Draft'}
+                      </Label>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {formData.isPublished 
+                        ? 'Your form is live and can be accessed via the public link'
+                        : 'Your form is in draft mode and not publicly accessible'
+                      }
+                    </p>
+                  </div>
+                  <Switch
+                    id="publish-toggle"
+                    checked={formData.isPublished || false}
+                    onCheckedChange={(checked) => 
+                      setFormData(prev => ({ ...prev, isPublished: checked }))
+                    }
+                  />
+                </div>
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
 
         {/* Form Branding */}
-        <BrandingEditor
-          branding={formData.branding}
-          onChange={(branding) => setFormData(prev => ({ ...prev, branding }))}
-        />
+        <Collapsible open={brandingOpen} onOpenChange={setBrandingOpen}>
+          <Card>
+            <CollapsibleTrigger asChild>
+              <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+                <div className="flex items-center justify-between">
+                  <CardTitle>Form Branding</CardTitle>
+                  {brandingOpen ? (
+                    <ChevronDown className="h-4 w-4" />
+                  ) : (
+                    <ChevronRight className="h-4 w-4" />
+                  )}
+                </div>
+              </CardHeader>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent className="p-0">
+                <BrandingEditor
+                  branding={formData.branding}
+                  onChange={(branding) => setFormData(prev => ({ ...prev, branding }))}
+                />
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
 
         {/* Form Fields */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold">Form Fields</h3>
-            <span className="text-sm text-muted-foreground">
-              {formData.fields.length} field{formData.fields.length !== 1 ? 's' : ''}
-            </span>
-          </div>
-          
-          <DndContext 
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
-          >
-            <SortableContext 
-              items={formData.fields.map(field => field.id)}
-              strategy={verticalListSortingStrategy}
-            >
-              {formData.fields.map((field) => (
-                <FieldEditor
-                  key={field.id}
-                  field={field}
-                  onUpdate={(updatedField) => handleUpdateField(field.id, updatedField)}
-                  onDelete={() => handleDeleteField(field.id)}
-                  isExpanded={expandedField === field.id}
-                  onToggleExpanded={() => setExpandedField(
-                    expandedField === field.id ? null : field.id
-                  )}
-                />
-              ))}
-            </SortableContext>
-          </DndContext>
-          
-          {formData.fields.length === 0 && (
-            <div className="text-center p-8 border-2 border-dashed border-muted rounded-lg">
-              <p className="text-muted-foreground">No fields yet. Add your first field below.</p>
-            </div>
-          )}
-        </div>
+        <Collapsible open={fieldsOpen} onOpenChange={setFieldsOpen}>
+          <Card>
+            <CollapsibleTrigger asChild>
+              <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+                <div className="flex items-center justify-between">
+                  <CardTitle>Form Fields</CardTitle>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm text-muted-foreground">
+                      {formData.fields.length} field{formData.fields.length !== 1 ? 's' : ''}
+                    </span>
+                    {fieldsOpen ? (
+                      <ChevronDown className="h-4 w-4" />
+                    ) : (
+                      <ChevronRight className="h-4 w-4" />
+                    )}
+                  </div>
+                </div>
+              </CardHeader>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent className="space-y-4">
+                <DndContext 
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
+                >
+                  <SortableContext 
+                    items={formData.fields.map(field => field.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {formData.fields.map((field) => (
+                      <FieldEditor
+                        key={field.id}
+                        field={field}
+                        onUpdate={(updatedField) => handleUpdateField(field.id, updatedField)}
+                        onDelete={() => handleDeleteField(field.id)}
+                        isExpanded={expandedField === field.id}
+                        onToggleExpanded={() => setExpandedField(
+                          expandedField === field.id ? null : field.id
+                        )}
+                      />
+                    ))}
+                  </SortableContext>
+                </DndContext>
+                
+                {formData.fields.length === 0 && (
+                  <div className="text-center p-8 border-2 border-dashed border-muted rounded-lg">
+                    <p className="text-muted-foreground">No fields yet. Add your first field below.</p>
+                  </div>
+                )}
 
-        {/* Template Selector Button */}
-        {formData.fields.length > 0 && (
-          <div className="flex justify-center">
-            <Button 
-              variant="outline" 
-              onClick={() => setShowTemplates(true)}
-              className="w-full"
-            >
-              <Layout className="h-4 w-4 mr-2" />
-              Choose Different Template
-            </Button>
-          </div>
-        )}
+                {/* Template Selector Button */}
+                {formData.fields.length > 0 && (
+                  <div className="flex justify-center pt-4">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setShowTemplates(true)}
+                      className="w-full"
+                    >
+                      <Layout className="h-4 w-4 mr-2" />
+                      Choose Different Template
+                    </Button>
+                  </div>
+                )}
 
-        {/* Add Field Section */}
-        <FieldSelector onAddField={handleAddField} />
+                {/* Add Field Section */}
+                <div className="pt-4">
+                  <FieldSelector onAddField={handleAddField} />
+                </div>
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
 
         {/* Thank You Page Editor */}
         <ThankYouPageEditor
@@ -361,23 +419,43 @@ const FormEditor = ({ initialData, onSave, isLoading }: FormEditorProps) => {
         />
 
         {/* Webhook Settings */}
-        <WebhookSettings
-          webhookConfig={{
-            webhook_enabled: formData.webhook_enabled || false,
-            webhook_url: formData.webhook_url || '',
-            webhook_method: formData.webhook_method || 'POST',
-            webhook_headers: formData.webhook_headers || {}
-          }}
-          onUpdate={(config) => 
-            setFormData(prev => ({ 
-              ...prev, 
-              webhook_enabled: config.webhook_enabled,
-              webhook_url: config.webhook_url,
-              webhook_method: config.webhook_method,
-              webhook_headers: config.webhook_headers
-            }))
-          }
-        />
+        <Collapsible open={webhooksOpen} onOpenChange={setWebhooksOpen}>
+          <Card>
+            <CollapsibleTrigger asChild>
+              <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+                <div className="flex items-center justify-between">
+                  <CardTitle>Webhook Settings</CardTitle>
+                  {webhooksOpen ? (
+                    <ChevronDown className="h-4 w-4" />
+                  ) : (
+                    <ChevronRight className="h-4 w-4" />
+                  )}
+                </div>
+              </CardHeader>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent className="p-0">
+                <WebhookSettings
+                  webhookConfig={{
+                    webhook_enabled: formData.webhook_enabled || false,
+                    webhook_url: formData.webhook_url || '',
+                    webhook_method: formData.webhook_method || 'POST',
+                    webhook_headers: formData.webhook_headers || {}
+                  }}
+                  onUpdate={(config) => 
+                    setFormData(prev => ({ 
+                      ...prev, 
+                      webhook_enabled: config.webhook_enabled,
+                      webhook_url: config.webhook_url,
+                      webhook_method: config.webhook_method,
+                      webhook_headers: config.webhook_headers
+                    }))
+                  }
+                />
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
 
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 pt-4 pb-4 lg:pb-0">
