@@ -36,11 +36,5 @@ verify_jwt = true
 [functions.webhook-delivery]
 verify_jwt = false
 
-[functions.google-sheets-delivery]
-verify_jwt = false
-
-[functions.airtable-delivery]
-verify_jwt = false
-
 [functions.test-webhook]
 verify_jwt = false

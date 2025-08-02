@@ -34,14 +34,6 @@ export interface FormData {
   webhook_url?: string;
   webhook_method?: string;
   webhook_headers?: Record<string, string>;
-  google_sheets_enabled?: boolean;
-  google_sheets_spreadsheet_id?: string;
-  google_sheets_worksheet_name?: string;
-  google_sheets_api_key?: string;
-  airtable_enabled?: boolean;
-  airtable_base_id?: string;
-  airtable_table_name?: string;
-  airtable_api_key?: string;
 }
 
 export interface FormResponse {

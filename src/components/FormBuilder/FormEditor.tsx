@@ -16,8 +16,6 @@ import ShareModal from './ShareModal';
 import TemplateSelector from './TemplateSelector';
 import ThankYouPageEditor from './ThankYouPageEditor';
 import { WebhookSettings } from './WebhookSettings';
-import GoogleSheetsSettings from './GoogleSheetsSettings';
-import AirtableSettings from './AirtableSettings';
 import { Save, Eye, Share2, Globe, Lock, Layout } from 'lucide-react';
 import { FormTemplate } from '@/lib/whatsapp';
 import {
@@ -53,13 +51,6 @@ const FormEditor = ({ initialData, onSave, isLoading }: FormEditorProps) => {
     webhook_url: '',
     webhook_method: 'POST',
     webhook_headers: {},
-    google_sheets_enabled: false,
-    google_sheets_spreadsheet_id: '',
-    google_sheets_worksheet_name: 'Sheet1',
-    airtable_enabled: false,
-    airtable_base_id: '',
-    airtable_table_name: '',
-    airtable_api_key: '',
     ...initialData
   });
   const [expandedField, setExpandedField] = useState<string | null>(null);
@@ -377,44 +368,6 @@ const FormEditor = ({ initialData, onSave, isLoading }: FormEditorProps) => {
               webhook_url: config.webhook_url,
               webhook_method: config.webhook_method,
               webhook_headers: config.webhook_headers
-            }))
-          }
-        />
-
-        {/* Google Sheets Settings */}
-        <GoogleSheetsSettings
-          googleSheetsConfig={{
-            enabled: formData.google_sheets_enabled || false,
-            spreadsheetId: formData.google_sheets_spreadsheet_id || '',
-            worksheetName: formData.google_sheets_worksheet_name || 'Sheet1',
-            apiKey: formData.google_sheets_api_key || ''
-          }}
-          onUpdate={(config) => 
-            setFormData(prev => ({ 
-              ...prev, 
-              google_sheets_enabled: config.enabled,
-              google_sheets_spreadsheet_id: config.spreadsheetId,
-              google_sheets_worksheet_name: config.worksheetName,
-              google_sheets_api_key: config.apiKey
-            }))
-          }
-              />
-
-        {/* Airtable Settings */}
-        <AirtableSettings
-          airtableConfig={{
-            enabled: formData.airtable_enabled || false,
-            baseId: formData.airtable_base_id || '',
-            tableName: formData.airtable_table_name || '',
-            apiKey: formData.airtable_api_key || ''
-          }}
-          onUpdate={(config) => 
-            setFormData(prev => ({ 
-              ...prev, 
-              airtable_enabled: config.enabled,
-              airtable_base_id: config.baseId,
-              airtable_table_name: config.tableName,
-              airtable_api_key: config.apiKey
             }))
           }
         />
