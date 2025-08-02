@@ -8,13 +8,14 @@ export interface FormOption {
 
 export interface FormField {
   id: string;
-  type: 'text' | 'textarea' | 'phone' | 'multiple-choice' | 'checkbox' | 'date' | 'file-upload';
+  type: 'text' | 'textarea' | 'phone' | 'multiple-choice' | 'checkbox' | 'date' | 'file-upload' | 'information';
   label: string;
   placeholder?: string;
   required: boolean;
   image?: string; // Optional image for the field itself
   showImageUpload?: boolean; // Toggle for showing image upload UI
   options?: string[] | FormOption[]; // For multiple-choice and checkbox fields
+  content?: string; // For information fields
 }
 
 export interface FormData {
@@ -52,8 +53,11 @@ export const generateWhatsAppMessage = (formData: FormData, responses: FormRespo
     message += `${formData.description}\n\n`;
   }
 
-  // Add field responses
+  // Add field responses (skip information fields)
   formData.fields.forEach((field) => {
+    // Skip information fields - they don't collect responses
+    if (field.type === 'information') return;
+    
     const response = responses[field.id];
     if (response) {
       message += `*${field.label}:*\n`;
@@ -106,6 +110,9 @@ export const generateSampleResponses = (fields: FormField[]): FormResponse => {
   const sampleResponses: FormResponse = {};
   
   fields.forEach((field) => {
+    // Skip information fields - they don't collect responses
+    if (field.type === 'information') return;
+    
     switch (field.type) {
       case 'text':
         sampleResponses[field.id] = field.label.toLowerCase().includes('name') ? 'John Doe' : 'Sample response';

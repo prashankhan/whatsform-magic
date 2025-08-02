@@ -9,7 +9,8 @@ import {
   Square,
   Calendar, 
   Upload,
-  Plus
+  Plus,
+  Info
 } from 'lucide-react';
 import { FormField } from '@/lib/whatsapp';
 
@@ -66,6 +67,13 @@ const fieldTypes = [
     description: 'Document or image upload',
     icon: Upload,
     color: 'text-red-600'
+  },
+  {
+    type: 'information' as const,
+    label: 'Information',
+    description: 'Display text for guidance or instructions',
+    icon: Info,
+    color: 'text-slate-600'
   }
 ];
 

@@ -128,17 +128,21 @@ const FormPreview = ({ isOpen, onClose, formData }: FormPreviewProps) => {
                   const image = typeof option === 'string' ? undefined : option.image;
                   
                   return (
-                    <div key={index} className="space-y-2">
+                    <div 
+                      key={index} 
+                      className="space-y-2 cursor-pointer"
+                      onClick={() => handleFieldChange(field.id, text)}
+                    >
                       {image && (
                         <img 
                           src={image} 
                           alt={`Image for ${text}`}
-                          className="w-full max-w-xs h-32 object-cover rounded-md border"
+                          className="w-full max-w-xs h-32 object-cover rounded-md border hover:border-primary transition-colors"
                         />
                       )}
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value={text} id={`${field.id}-${index}`} />
-                        <Label htmlFor={`${field.id}-${index}`}>{text}</Label>
+                        <Label htmlFor={`${field.id}-${index}`} className="cursor-pointer">{text}</Label>
                       </div>
                     </div>
                   );
@@ -158,33 +162,37 @@ const FormPreview = ({ isOpen, onClose, formData }: FormPreviewProps) => {
             </Label>
             {renderFieldImage(field)}
             <div className="space-y-4">
-              {field.options?.map((option, index) => {
-                const text = typeof option === 'string' ? option : option.text;
-                const image = typeof option === 'string' ? undefined : option.image;
-                const isSelected = checkboxValues.includes(text);
-                
-                return (
-                  <div key={index} className="space-y-2">
-                    {image && (
-                      <img 
-                        src={image} 
-                        alt={`Image for ${text}`}
-                        className="w-full max-w-xs h-32 object-cover rounded-md border"
-                      />
-                    )}
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`${field.id}-${index}`}
-                        checked={isSelected}
-                        onCheckedChange={(checked) => 
-                          handleCheckboxChange(field.id, text, checked as boolean)
-                        }
-                      />
-                      <Label htmlFor={`${field.id}-${index}`}>{text}</Label>
+                {field.options?.map((option, index) => {
+                  const text = typeof option === 'string' ? option : option.text;
+                  const image = typeof option === 'string' ? undefined : option.image;
+                  const isSelected = checkboxValues.includes(text);
+                  
+                  return (
+                    <div 
+                      key={index} 
+                      className="space-y-2 cursor-pointer"
+                      onClick={() => handleCheckboxChange(field.id, text, !isSelected)}
+                    >
+                      {image && (
+                        <img 
+                          src={image} 
+                          alt={`Image for ${text}`}
+                          className="w-full max-w-xs h-32 object-cover rounded-md border hover:border-primary transition-colors"
+                        />
+                      )}
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`${field.id}-${index}`}
+                          checked={isSelected}
+                          onCheckedChange={(checked) => 
+                            handleCheckboxChange(field.id, text, checked as boolean)
+                          }
+                        />
+                        <Label htmlFor={`${field.id}-${index}`} className="cursor-pointer">{text}</Label>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
             </div>
           </div>
         );
@@ -229,6 +237,21 @@ const FormPreview = ({ isOpen, onClose, formData }: FormPreviewProps) => {
               />
               <Upload className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
             </div>
+          </div>
+        );
+
+      case 'information':
+        return (
+          <div key={field.id} className="space-y-2">
+            {field.label && (
+              <h3 className="text-lg font-medium text-foreground">{field.label}</h3>
+            )}
+            {field.content && (
+              <div className="p-4 bg-muted/50 border border-border rounded-md">
+                <p className="text-muted-foreground whitespace-pre-wrap">{field.content}</p>
+              </div>
+            )}
+            {renderFieldImage(field)}
           </div>
         );
 

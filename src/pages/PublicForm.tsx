@@ -213,17 +213,21 @@ export default function PublicForm() {
                   const image = typeof option === 'string' ? undefined : option.image;
                   
                   return (
-                    <div key={index} className="space-y-2">
+                    <div 
+                      key={index} 
+                      className="space-y-2 cursor-pointer"
+                      onClick={() => setResponses(prev => ({ ...prev, [field.id]: text }))}
+                    >
                       {image && (
                         <img 
                           src={image} 
                           alt={`Image for ${text}`}
-                          className="w-full max-w-xs h-32 object-cover rounded-md border"
+                          className="w-full max-w-xs h-32 object-cover rounded-md border hover:border-primary transition-colors"
                         />
                       )}
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value={text} id={`${field.id}-${index}`} />
-                        <Label htmlFor={`${field.id}-${index}`}>{text}</Label>
+                        <Label htmlFor={`${field.id}-${index}`} className="cursor-pointer">{text}</Label>
                       </div>
                     </div>
                   );
@@ -304,12 +308,29 @@ export default function PublicForm() {
                 const isSelected = (value as string[] || []).includes(text);
                 
                 return (
-                  <div key={index} className="space-y-2">
+                  <div 
+                    key={index} 
+                    className="space-y-2 cursor-pointer"
+                    onClick={() => {
+                      const currentValues = (value as string[]) || [];
+                      if (isSelected) {
+                        setResponses(prev => ({ 
+                          ...prev, 
+                          [field.id]: currentValues.filter(v => v !== text) 
+                        }));
+                      } else {
+                        setResponses(prev => ({ 
+                          ...prev, 
+                          [field.id]: [...currentValues, text] 
+                        }));
+                      }
+                    }}
+                  >
                     {image && (
                       <img 
                         src={image} 
                         alt={`Image for ${text}`}
-                        className="w-full max-w-xs h-32 object-cover rounded-md border"
+                        className="w-full max-w-xs h-32 object-cover rounded-md border hover:border-primary transition-colors"
                       />
                     )}
                     <div className="flex items-center space-x-2">
@@ -331,7 +352,7 @@ export default function PublicForm() {
                           }
                         }}
                       />
-                      <Label htmlFor={`${field.id}-${index}`}>{text}</Label>
+                      <Label htmlFor={`${field.id}-${index}`} className="cursor-pointer">{text}</Label>
                     </div>
                   </div>
                 );
@@ -355,6 +376,21 @@ export default function PublicForm() {
               required={field.required}
               error={error}
             />
+          </div>
+        );
+
+      case 'information':
+        return (
+          <div key={field.id} className="space-y-2">
+            {field.label && (
+              <h3 className="text-lg font-medium text-foreground">{field.label}</h3>
+            )}
+            {field.content && (
+              <div className="p-4 bg-muted/50 border border-border rounded-md">
+                <p className="text-muted-foreground whitespace-pre-wrap">{field.content}</p>
+              </div>
+            )}
+            {renderFieldImage(field)}
           </div>
         );
 

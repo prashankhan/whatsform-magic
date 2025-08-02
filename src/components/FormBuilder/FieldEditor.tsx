@@ -66,6 +66,7 @@ const FieldEditor = ({ field, onUpdate, onDelete, isExpanded, onToggleExpanded }
       case 'checkbox': return 'Checkbox';
       case 'date': return 'Date/Time';
       case 'file-upload': return 'File Upload';
+      case 'information': return 'Information';
       default: return type;
     }
   };
@@ -119,14 +120,30 @@ const FieldEditor = ({ field, onUpdate, onDelete, isExpanded, onToggleExpanded }
           <CardContent className="space-y-4">
             {/* Field Label */}
             <div className="space-y-2">
-              <Label htmlFor={`label-${field.id}`}>Field Label</Label>
+              <Label htmlFor={`label-${field.id}`}>
+                {field.type === 'information' ? 'Information Title (Optional)' : 'Field Label'}
+              </Label>
               <Input
                 id={`label-${field.id}`}
                 value={field.label}
                 onChange={(e) => onUpdate({ ...field, label: e.target.value })}
-                placeholder="Enter field label"
+                placeholder={field.type === 'information' ? 'Enter information title' : 'Enter field label'}
               />
             </div>
+
+            {/* Information Content */}
+            {field.type === 'information' && (
+              <div className="space-y-2">
+                <Label htmlFor={`content-${field.id}`}>Information Content</Label>
+                <Textarea
+                  id={`content-${field.id}`}
+                  value={field.content || ''}
+                  onChange={(e) => onUpdate({ ...field, content: e.target.value })}
+                  placeholder="Enter information text that will be displayed to users"
+                  className="min-h-[100px]"
+                />
+              </div>
+            )}
 
             {/* Placeholder (for text, textarea, and phone fields) */}
             {(field.type === 'text' || field.type === 'textarea' || field.type === 'phone') && (
@@ -183,15 +200,17 @@ const FieldEditor = ({ field, onUpdate, onDelete, isExpanded, onToggleExpanded }
               </div>
             )}
 
-            {/* Required Toggle */}
-            <div className="flex items-center justify-between">
-              <Label htmlFor={`required-${field.id}`}>Required field</Label>
-              <Switch
-                id={`required-${field.id}`}
-                checked={field.required}
-                onCheckedChange={(checked) => onUpdate({ ...field, required: checked })}
-              />
-            </div>
+            {/* Required Toggle (not for information fields) */}
+            {field.type !== 'information' && (
+              <div className="flex items-center justify-between">
+                <Label htmlFor={`required-${field.id}`}>Required field</Label>
+                <Switch
+                  id={`required-${field.id}`}
+                  checked={field.required}
+                  onCheckedChange={(checked) => onUpdate({ ...field, required: checked })}
+                />
+              </div>
+            )}
           </CardContent>
         </CollapsibleContent>
       </Collapsible>
