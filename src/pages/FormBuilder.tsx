@@ -59,10 +59,6 @@ const FormBuilderContent = () => {
         webhook_headers: (typeof data.webhook_headers === 'object' && data.webhook_headers !== null) 
           ? data.webhook_headers as Record<string, string> 
           : {},
-        google_sheets_enabled: data.google_sheets_enabled || false,
-        google_sheets_spreadsheet_id: data.google_sheets_spreadsheet_id || '',
-        google_sheets_worksheet_name: data.google_sheets_worksheet_name || 'Sheet1',
-        google_sheets_api_key: data.google_sheets_api_key || ''
       });
     } catch (error) {
       console.error('Error:', error);
@@ -98,10 +94,6 @@ const FormBuilderContent = () => {
         webhook_url: formData.webhook_url || null,
         webhook_method: formData.webhook_method || 'POST',
         webhook_headers: formData.webhook_headers || {},
-        google_sheets_enabled: formData.google_sheets_enabled || false,
-        google_sheets_spreadsheet_id: formData.google_sheets_spreadsheet_id || null,
-        google_sheets_worksheet_name: formData.google_sheets_worksheet_name || 'Sheet1',
-        google_sheets_api_key: formData.google_sheets_api_key || null,
         user_id: user?.id
       };
 
