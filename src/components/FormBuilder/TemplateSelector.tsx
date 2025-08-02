@@ -33,6 +33,20 @@ const TemplateSelector = ({ isOpen, onClose, onSelectTemplate }: TemplateSelecto
     onClose();
   };
 
+  const handleStartFromScratch = () => {
+    const blankTemplate: FormTemplate = {
+      id: 'blank',
+      name: 'Blank Form',
+      description: 'Start with a blank form',
+      category: 'general',
+      defaultTitle: 'New Form',
+      defaultDescription: '',
+      fields: []
+    };
+    onSelectTemplate(blankTemplate);
+    onClose();
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
@@ -47,7 +61,7 @@ const TemplateSelector = ({ isOpen, onClose, onSelectTemplate }: TemplateSelecto
           {/* Start from Scratch Option */}
           <div>
             <h3 className="text-sm font-medium mb-3">Custom</h3>
-            <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => onClose()}>
+            <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={handleStartFromScratch}>
               <CardHeader>
                 <CardTitle className="text-base">Start from Scratch</CardTitle>
                 <CardDescription>

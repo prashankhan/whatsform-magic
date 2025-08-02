@@ -32,18 +32,11 @@ const FileUploadField = ({ fieldId, value, onChange, required, error }: FileUplo
     setUploadError(null);
 
     try {
-      // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        setUploadError('You must be logged in to upload files');
-        return;
-      }
-
-      // Upload file to Supabase Storage
+      // Upload file to Supabase Storage (works for both authenticated and public users)
       const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+      const fileName = `public/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
       
-      const { error: uploadError } = await supabase.storage
+      const { data, error: uploadError } = await supabase.storage
         .from('form-uploads')
         .upload(fileName, file);
 
@@ -53,8 +46,16 @@ const FileUploadField = ({ fieldId, value, onChange, required, error }: FileUplo
         return;
       }
 
-      // Create a file reference with the storage path
-      const fileWithPath = Object.assign(file, { storagePath: fileName });
+      // Get the public URL for the uploaded file
+      const { data: { publicUrl } } = supabase.storage
+        .from('form-uploads')
+        .getPublicUrl(fileName);
+
+      // Create a file reference with the storage path and public URL
+      const fileWithPath = Object.assign(file, { 
+        storagePath: fileName,
+        publicUrl: publicUrl
+      });
       onChange(fieldId, fileWithPath);
       
     } catch (error) {

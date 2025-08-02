@@ -51,9 +51,13 @@ export const generateWhatsAppMessage = (formData: FormData, responses: FormRespo
       message += `*${field.label}:*\n`;
       
       if (field.type === 'file-upload' && response instanceof File) {
-        // For file uploads, we'll include the Cloudinary URL (placeholder for now)
-        message += `📎 ${response.name}\n`;
-        message += `🔗 https://cloudinary.com/uploaded-file-url\n\n`;
+        const file = response as File & { publicUrl?: string };
+        message += `📎 ${file.name}\n`;
+        if (file.publicUrl) {
+          message += `🔗 ${file.publicUrl}\n\n`;
+        } else {
+          message += `🔗 File uploaded\n\n`;
+        }
       } else if (Array.isArray(response)) {
         message += `${response.join(', ')}\n\n`;
       } else {
