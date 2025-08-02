@@ -77,12 +77,56 @@ serve(async (req) => {
     }
 
     if (action === 'callback') {
-      // Handle OAuth callback
+      // Handle OAuth callback - NO authentication required at this stage
       const code = url.searchParams.get('code');
       const state = url.searchParams.get('state');
+      const error = url.searchParams.get('error');
+      
+      console.log('[GOOGLE-OAUTH] Callback received:', { 
+        code: !!code, 
+        state, 
+        error,
+        hasCode: code ? 'YES' : 'NO',
+        codeLength: code?.length || 0
+      });
+      
+      if (error) {
+        console.log('[GOOGLE-OAUTH] OAuth error received:', error);
+        return new Response(`
+          <html>
+            <body>
+              <script>
+                window.opener?.postMessage({ 
+                  type: 'GOOGLE_AUTH_ERROR', 
+                  error: '${error}' 
+                }, '*');
+                window.close();
+              </script>
+            </body>
+          </html>
+        `, { 
+          headers: { 'Content-Type': 'text/html' }
+        });
+      }
       
       if (!code) {
-        throw new Error('Authorization code not provided');
+        console.log('[GOOGLE-OAUTH] No authorization code provided');
+        return new Response(`
+          <html>
+            <body>
+              <script>
+                window.opener?.postMessage({ 
+                  type: 'GOOGLE_AUTH_ERROR', 
+                  error: 'No authorization code provided' 
+                }, '*');
+                window.close();
+              </script>
+            </body>
+          </html>
+        `, { 
+          headers: { 'Content-Type': 'text/html' },
+          status: 400
+        });
       }
 
       // Exchange code for tokens - use hardcoded HTTPS redirect URI
@@ -226,7 +270,36 @@ serve(async (req) => {
     throw new Error('Invalid action');
 
   } catch (error) {
-    console.error('[GOOGLE-OAUTH] Error:', error.message);
+    console.error('[GOOGLE-OAUTH] Error occurred:', {
+      message: error.message,
+      action: new URL(req.url).searchParams.get('action'),
+      method: req.method,
+      url: req.url,
+      hasAuthHeader: !!req.headers.get('Authorization')
+    });
+    
+    // For callback errors, return HTML instead of JSON
+    const url = new URL(req.url);
+    const action = url.searchParams.get('action');
+    
+    if (action === 'callback') {
+      return new Response(`
+        <html>
+          <body>
+            <script>
+              window.opener?.postMessage({ 
+                type: 'GOOGLE_AUTH_ERROR', 
+                error: '${error.message}' 
+              }, '*');
+              window.close();
+            </script>
+          </body>
+        </html>
+      `, { 
+        headers: { 'Content-Type': 'text/html' },
+        status: 500
+      });
+    }
     
     return new Response(
       JSON.stringify({ 
@@ -234,7 +307,7 @@ serve(async (req) => {
         error: error.message 
       }),
       { 
-        status: 500,
+        status: error.message.includes('authorization header') ? 401 : 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
     );
