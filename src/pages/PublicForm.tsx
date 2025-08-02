@@ -165,8 +165,26 @@ export default function PublicForm() {
       });
 
       // Generate WhatsApp URL and open it
+      console.log('Generating WhatsApp URL with:', {
+        formData: formData,
+        responses: responses,
+        businessPhone: formData.businessPhone
+      });
+      
       const whatsappUrl = generateWhatsAppUrl(formData, responses);
-      window.open(whatsappUrl, '_blank');
+      console.log('Generated WhatsApp URL:', whatsappUrl);
+      
+      if (whatsappUrl && whatsappUrl.startsWith('https://wa.me/')) {
+        console.log('Opening WhatsApp URL...');
+        window.open(whatsappUrl, '_blank');
+      } else {
+        console.error('Invalid WhatsApp URL generated:', whatsappUrl);
+        toast({
+          variant: "destructive",
+          title: "WhatsApp Error",
+          description: "Could not generate WhatsApp URL. Please check the business phone number."
+        });
+      }
     } catch (error) {
       console.error('Error submitting form - Full error object:', error);
       console.error('Error message:', error instanceof Error ? error.message : 'Unknown error');
