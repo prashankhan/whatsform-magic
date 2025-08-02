@@ -9,7 +9,7 @@ const corsHeaders = {
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
-const googleSheetsApiKey = Deno.env.get('GOOGLE_SHEETS_API_KEY');
+const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -23,21 +23,18 @@ serve(async (req) => {
       throw new Error('Submission ID is required');
     }
 
-    if (!googleSheetsApiKey) {
-      throw new Error('Google Sheets API key not configured');
-    }
-
     console.log(`[GOOGLE-SHEETS] Processing submission ${submissionId}`);
 
-    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get submission details
+    // Get submission details with form owner info
     const { data: submission, error: submissionError } = await supabase
       .from('form_submissions')
       .select(`
         *,
         forms!inner(
           title,
+          user_id,
           google_sheets_enabled,
           google_sheets_spreadsheet_id,
           google_sheets_worksheet_name,
@@ -66,6 +63,61 @@ serve(async (req) => {
       throw new Error('Google Sheets spreadsheet ID not configured');
     }
 
+    // Get form owner's Google tokens
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('google_access_token, google_refresh_token, google_token_expires_at')
+      .eq('user_id', submission.forms.user_id)
+      .single();
+
+    if (profileError || !profile) {
+      throw new Error('Failed to fetch form owner profile');
+    }
+
+    if (!profile.google_access_token) {
+      throw new Error('Form owner has not connected their Google account');
+    }
+
+    // Check if token needs refresh
+    let accessToken = profile.google_access_token;
+    const tokenExpiry = new Date(profile.google_token_expires_at);
+    const now = new Date();
+    
+    if (now >= tokenExpiry && profile.google_refresh_token) {
+      console.log(`[GOOGLE-SHEETS] Refreshing expired access token`);
+      
+      const refreshResponse = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          client_id: Deno.env.get('GOOGLE_CLIENT_ID')!,
+          client_secret: Deno.env.get('GOOGLE_CLIENT_SECRET')!,
+          refresh_token: profile.google_refresh_token,
+          grant_type: 'refresh_token',
+        }),
+      });
+
+      const refreshData = await refreshResponse.json();
+      
+      if (!refreshResponse.ok) {
+        throw new Error(`Token refresh failed: ${refreshData.error_description || refreshData.error}`);
+      }
+
+      accessToken = refreshData.access_token;
+      
+      // Update the access token in the database
+      const newExpiry = new Date(Date.now() + (refreshData.expires_in * 1000));
+      await supabase
+        .from('profiles')
+        .update({
+          google_access_token: accessToken,
+          google_token_expires_at: newExpiry.toISOString(),
+        })
+        .eq('user_id', submission.forms.user_id);
+    }
+
     console.log(`[GOOGLE-SHEETS] Attempting delivery to spreadsheet ${spreadsheetId}, worksheet ${worksheetName}`);
 
     // Prepare the row data
@@ -89,9 +141,13 @@ serve(async (req) => {
     ];
 
     // Get current sheet data to check if headers exist
-    const sheetsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${worksheetName}!A1:Z1?key=${googleSheetsApiKey}`;
+    const sheetsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${worksheetName}!A1:Z1`;
     
-    const existingDataResponse = await fetch(sheetsUrl);
+    const existingDataResponse = await fetch(sheetsUrl, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+      },
+    });
     const existingData = await existingDataResponse.json();
     
     let needsHeaders = false;
@@ -100,7 +156,7 @@ serve(async (req) => {
     }
 
     // Append data to the sheet
-    const appendUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${worksheetName}:append?valueInputOption=RAW&key=${googleSheetsApiKey}`;
+    const appendUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${worksheetName}:append?valueInputOption=RAW`;
     
     const valuesToAppend = needsHeaders ? [headers, rowData] : [rowData];
     
@@ -108,6 +164,7 @@ serve(async (req) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`,
       },
       body: JSON.stringify({
         values: valuesToAppend
