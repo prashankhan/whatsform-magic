@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      error_logs: {
+        Row: {
+          context: Json | null
+          created_at: string
+          error_message: string
+          error_stack: string | null
+          error_type: string
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          context?: Json | null
+          created_at?: string
+          error_message: string
+          error_stack?: string | null
+          error_type: string
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          context?: Json | null
+          created_at?: string
+          error_message?: string
+          error_stack?: string | null
+          error_type?: string
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       form_submissions: {
         Row: {
           form_id: string
@@ -260,6 +290,10 @@ export type Database = {
           window_minutes?: number
         }
         Returns: boolean
+      }
+      cleanup_old_error_logs: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       is_form_published: {
         Args: { form_uuid: string }

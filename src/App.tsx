@@ -12,6 +12,7 @@ import FormBuilder from "./pages/FormBuilder";
 import PublicForm from "./pages/PublicForm";
 import Analytics from "./pages/Analytics";
 import Billing from "./pages/Billing";
+import Monitoring from "./pages/Monitoring";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/billing" element={<Billing />} />
+            <Route path="/monitoring" element={<Monitoring />} />
             <Route path="/form-builder" element={<FormBuilder />} />
             <Route path="/form-builder/:id" element={<FormBuilder />} />
             <Route path="/form/:id" element={<PublicForm />} />
