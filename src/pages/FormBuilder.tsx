@@ -3,49 +3,28 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
 import { useToast } from '@/hooks/use-toast';
+import { SubscriptionProvider } from '@/hooks/useSubscription';
 import NavBar from '@/components/NavBar';
 import FormEditor from '@/components/FormBuilder/FormEditor';
 import { FormData } from '@/lib/whatsapp';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-const FormBuilder = () => {
+const FormBuilderContent = () => {
   const { id } = useParams<{ id?: string }>();
   const navigate = useNavigate();
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
   const [formData, setFormData] = useState<FormData | undefined>();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        if (!session) {
-          navigate('/auth');
-        }
-      }
-    );
-
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (!session) {
-        navigate('/auth');
-      } else if (id) {
-        loadForm(id);
-      } else {
-        setLoading(false);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [navigate, id]);
+    if (id) {
+      loadForm(id);
+    } else {
+      setLoading(false);
+    }
+  }, [id]);
 
   const loadForm = async (formId: string) => {
     try {
@@ -89,6 +68,13 @@ const FormBuilder = () => {
   };
 
   const handleSave = async (formData: FormData) => {
+    // Get current user for saving
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+
     setSaving(true);
     try {
       const formPayload = {
@@ -128,10 +114,6 @@ const FormBuilder = () => {
     } finally {
       setSaving(false);
     }
-  };
-
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
   };
 
   if (loading) {
@@ -180,6 +162,42 @@ const FormBuilder = () => {
         />
       </div>
     </div>
+  );
+};
+
+const FormBuilder = () => {
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        if (!session) {
+          navigate('/auth');
+        }
+      }
+    );
+
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      if (!session) {
+        navigate('/auth');
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
+
+  return (
+    <SubscriptionProvider user={user}>
+      <FormBuilderContent />
+    </SubscriptionProvider>
   );
 };
 
