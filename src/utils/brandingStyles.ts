@@ -124,5 +124,39 @@ export const generateCSSVariables = (branding: FormBranding): React.CSSPropertie
     cssVars['--field-border-color' as any] = branding.fieldBorderColor;
   }
   
+  if (branding.fieldFocusColor) {
+    cssVars['--field-focus-color' as any] = branding.fieldFocusColor;
+  }
+  
+  // Form Controls
+  if (branding.checkboxColor) {
+    cssVars['--checkbox-color' as any] = branding.checkboxColor;
+  }
+  
+  if (branding.checkboxBorderColor) {
+    cssVars['--checkbox-border-color' as any] = branding.checkboxBorderColor;
+  }
+  
+  if (branding.radioButtonColor) {
+    cssVars['--radio-color' as any] = branding.radioButtonColor;
+  }
+  
+  if (branding.radioButtonBorderColor) {
+    cssVars['--radio-border-color' as any] = branding.radioButtonBorderColor;
+  }
+  
+  // File Upload
+  if (branding.fileUploadBorderColor) {
+    cssVars['--file-upload-border-color' as any] = branding.fileUploadBorderColor;
+  }
+  
+  if (branding.fileUploadBackgroundColor) {
+    cssVars['--file-upload-background-color' as any] = branding.fileUploadBackgroundColor;
+  }
+  
+  if (branding.fileUploadPlaceholderTextColor) {
+    cssVars['--file-upload-placeholder-color' as any] = branding.fileUploadPlaceholderTextColor;
+  }
+  
   return cssVars;
 };

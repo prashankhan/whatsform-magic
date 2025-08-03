@@ -90,22 +90,27 @@ const FileUploadField = ({ fieldId, value, onChange, required, error }: FileUplo
           {...getRootProps()}
           className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
             isDragActive 
-              ? 'border-primary bg-primary/5' 
-              : 'border-muted-foreground/25 hover:border-primary hover:bg-primary/5'
+              ? 'border-[var(--file-upload-border-color,hsl(var(--primary)))] bg-[var(--file-upload-background-color,hsl(var(--primary)/0.05))]' 
+              : 'border-[var(--file-upload-border-color,hsl(var(--muted-foreground)/0.25))] hover:border-[var(--file-upload-border-color,hsl(var(--primary)))] hover:bg-[var(--file-upload-background-color,hsl(var(--primary)/0.05))]'
           } ${error ? 'border-destructive' : ''}`}
+          style={{
+            backgroundColor: isDragActive 
+              ? 'var(--file-upload-background-color, hsl(var(--primary) / 0.05))'
+              : undefined
+          }}
         >
           <input {...getInputProps()} />
-          <Upload className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+          <Upload className="mx-auto h-12 w-12 mb-4" style={{ color: 'var(--file-upload-placeholder-color, hsl(var(--muted-foreground)))' }} />
           {uploading ? (
-            <p className="text-sm text-muted-foreground">Uploading...</p>
+            <p className="text-sm" style={{ color: 'var(--file-upload-placeholder-color, hsl(var(--muted-foreground)))' }}>Uploading...</p>
           ) : isDragActive ? (
-            <p className="text-sm text-primary">Drop the file here</p>
+            <p className="text-sm" style={{ color: 'var(--file-upload-border-color, hsl(var(--primary)))' }}>Drop the file here</p>
           ) : (
             <div>
-              <p className="text-sm text-muted-foreground mb-2">
+              <p className="text-sm mb-2" style={{ color: 'var(--file-upload-placeholder-color, hsl(var(--muted-foreground)))' }}>
                 Drag & drop a file here, or click to select
               </p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs" style={{ color: 'var(--file-upload-placeholder-color, hsl(var(--muted-foreground)))' }}>
                 Supports PDF, DOC, DOCX, images, and text files (max 10MB)
               </p>
             </div>

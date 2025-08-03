@@ -70,7 +70,7 @@ const FormPreview = ({ isOpen, onClose, formData }: FormPreviewProps) => {
       case 'text':
         return (
           <div key={field.id} className="space-y-2">
-            <Label htmlFor={field.id}>
+            <Label htmlFor={field.id} style={generateTextStyles(branding, 'fieldLabel')}>
               {field.label} {field.required && <span className="text-destructive">*</span>}
             </Label>
             {renderFieldImage(field)}
@@ -87,7 +87,7 @@ const FormPreview = ({ isOpen, onClose, formData }: FormPreviewProps) => {
       case 'textarea':
         return (
           <div key={field.id} className="space-y-2">
-            <Label htmlFor={field.id}>
+            <Label htmlFor={field.id} style={generateTextStyles(branding, 'fieldLabel')}>
               {field.label} {field.required && <span className="text-destructive">*</span>}
             </Label>
             {renderFieldImage(field)}
@@ -105,7 +105,7 @@ const FormPreview = ({ isOpen, onClose, formData }: FormPreviewProps) => {
       case 'phone':
         return (
           <div key={field.id} className="space-y-2">
-            <Label htmlFor={field.id}>
+            <Label htmlFor={field.id} style={generateTextStyles(branding, 'fieldLabel')}>
               {field.label} {field.required && <span className="text-destructive">*</span>}
             </Label>
             {renderFieldImage(field)}
@@ -123,7 +123,7 @@ const FormPreview = ({ isOpen, onClose, formData }: FormPreviewProps) => {
       case 'multiple-choice':
         return (
           <div key={field.id} className="space-y-3">
-            <Label>
+            <Label style={generateTextStyles(branding, 'fieldLabel')}>
               {field.label} {field.required && <span className="text-destructive">*</span>}
             </Label>
             {renderFieldImage(field)}
@@ -165,7 +165,7 @@ const FormPreview = ({ isOpen, onClose, formData }: FormPreviewProps) => {
         const checkboxValues = (responses[field.id] as string[]) || [];
         return (
           <div key={field.id} className="space-y-3">
-            <Label>
+            <Label style={generateTextStyles(branding, 'fieldLabel')}>
               {field.label} {field.required && <span className="text-destructive">*</span>}
               <span className="text-sm text-muted-foreground ml-2">(Select multiple)</span>
             </Label>
@@ -209,7 +209,7 @@ const FormPreview = ({ isOpen, onClose, formData }: FormPreviewProps) => {
       case 'date':
         return (
           <div key={field.id} className="space-y-2">
-            <Label htmlFor={field.id}>
+            <Label htmlFor={field.id} style={generateTextStyles(branding, 'fieldLabel')}>
               {field.label} {field.required && <span className="text-destructive">*</span>}
             </Label>
             {renderFieldImage(field)}
@@ -229,7 +229,7 @@ const FormPreview = ({ isOpen, onClose, formData }: FormPreviewProps) => {
       case 'file-upload':
         return (
           <div key={field.id} className="space-y-2">
-            <Label htmlFor={field.id}>
+            <Label htmlFor={field.id} style={generateTextStyles(branding, 'fieldLabel')}>
               {field.label} {field.required && <span className="text-destructive">*</span>}
             </Label>
             {renderFieldImage(field)}

@@ -306,6 +306,92 @@ export const BrandingEditor: React.FC<BrandingEditorProps> = ({
                   disabled={!subscribed}
                   description="Color of placeholder text"
                 />
+                <ColorInput
+                  id="fieldFocusColor"
+                  label="Field Focus Ring"
+                  value={branding.fieldFocusColor}
+                  defaultValue="#3b82f6"
+                  onChange={(value) => updateBranding({ fieldFocusColor: value })}
+                  disabled={!subscribed}
+                  description="Focus ring color for form inputs"
+                />
+              </div>
+            </div>
+
+            {/* Form Controls */}
+            <div className="space-y-4">
+              <h4 className="text-sm font-medium text-muted-foreground">Form Controls</h4>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <ColorInput
+                  id="checkboxColor"
+                  label="Checkbox Fill"
+                  value={branding.checkboxColor}
+                  defaultValue="#3b82f6"
+                  onChange={(value) => updateBranding({ checkboxColor: value })}
+                  disabled={!subscribed}
+                  description="Background color when checkbox is checked"
+                />
+                <ColorInput
+                  id="checkboxBorderColor"
+                  label="Checkbox Border"
+                  value={branding.checkboxBorderColor}
+                  defaultValue="#d1d5db"
+                  onChange={(value) => updateBranding({ checkboxBorderColor: value })}
+                  disabled={!subscribed}
+                  description="Border color of checkboxes"
+                />
+                <ColorInput
+                  id="radioButtonColor"
+                  label="Radio Button Fill"
+                  value={branding.radioButtonColor}
+                  defaultValue="#3b82f6"
+                  onChange={(value) => updateBranding({ radioButtonColor: value })}
+                  disabled={!subscribed}
+                  description="Color when radio button is selected"
+                />
+                <ColorInput
+                  id="radioButtonBorderColor"
+                  label="Radio Button Border"
+                  value={branding.radioButtonBorderColor}
+                  defaultValue="#d1d5db"
+                  onChange={(value) => updateBranding({ radioButtonBorderColor: value })}
+                  disabled={!subscribed}
+                  description="Border color of radio buttons"
+                />
+              </div>
+            </div>
+
+            {/* File Upload Styling */}
+            <div className="space-y-4">
+              <h4 className="text-sm font-medium text-muted-foreground">File Upload Styling</h4>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <ColorInput
+                  id="fileUploadBorderColor"
+                  label="Upload Border"
+                  value={branding.fileUploadBorderColor}
+                  defaultValue="#d1d5db"
+                  onChange={(value) => updateBranding({ fileUploadBorderColor: value })}
+                  disabled={!subscribed}
+                  description="Border color of file upload area"
+                />
+                <ColorInput
+                  id="fileUploadBackgroundColor"
+                  label="Upload Background"
+                  value={branding.fileUploadBackgroundColor}
+                  defaultValue="#f9fafb"
+                  onChange={(value) => updateBranding({ fileUploadBackgroundColor: value })}
+                  disabled={!subscribed}
+                  description="Background color of file upload area"
+                />
+                <ColorInput
+                  id="fileUploadPlaceholderTextColor"
+                  label="Upload Text"
+                  value={branding.fileUploadPlaceholderTextColor}
+                  defaultValue="#6b7280"
+                  onChange={(value) => updateBranding({ fileUploadPlaceholderTextColor: value })}
+                  disabled={!subscribed}
+                  description="Text color in file upload area"
+                />
               </div>
             </div>
 

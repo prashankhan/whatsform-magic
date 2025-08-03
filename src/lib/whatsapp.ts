@@ -43,6 +43,18 @@ export interface FormBranding {
   // Field Styling
   fieldBorderColor?: string;
   placeholderTextColor?: string;
+  fieldFocusColor?: string;
+  
+  // Form Controls
+  checkboxColor?: string;
+  checkboxBorderColor?: string;
+  radioButtonColor?: string;
+  radioButtonBorderColor?: string;
+  
+  // File Upload Styling
+  fileUploadBorderColor?: string;
+  fileUploadBackgroundColor?: string;
+  fileUploadPlaceholderTextColor?: string;
   
   // Link Colors
   linkColor?: string;
