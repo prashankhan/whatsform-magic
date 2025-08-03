@@ -38,7 +38,7 @@ export default function PublicForm() {
     try {
       const { data, error } = await supabase
         .from('forms')
-        .select('*, webhook_enabled, webhook_url, webhook_method, webhook_headers')
+        .select('*, webhook_enabled, webhook_url, webhook_method, webhook_headers, branding')
         .eq('id', formId)
         .eq('is_published', true)
         .single();
@@ -55,6 +55,7 @@ export default function PublicForm() {
           description: data.description,
           businessPhone: data.business_phone || '',
           fields: (data.fields as unknown) as FormField[],
+          branding: (data.branding as unknown) as any || {},
           thankYouPage: (data.thank_you_page && typeof data.thank_you_page === 'object') ? data.thank_you_page as any : undefined,
           webhook_enabled: data.webhook_enabled,
           webhook_url: data.webhook_url,
@@ -594,11 +595,64 @@ export default function PublicForm() {
     );
   }
 
+  // Generate inline styles for branding
+  const getFormStyles = () => {
+    const branding = formData?.branding || {};
+    const styles: React.CSSProperties = {};
+    
+    if (branding.backgroundColor) {
+      styles.backgroundColor = branding.backgroundColor;
+    }
+    
+    if (branding.backgroundImage) {
+      styles.backgroundImage = `url(${branding.backgroundImage})`;
+      styles.backgroundSize = 'cover';
+      styles.backgroundPosition = 'center';
+      styles.backgroundRepeat = 'no-repeat';
+    }
+    
+    return styles;
+  };
+
+  const getButtonStyles = () => {
+    const branding = formData?.branding || {};
+    const styles: React.CSSProperties = {};
+    
+    if (branding.primaryColor) {
+      styles.backgroundColor = branding.primaryColor;
+      styles.borderColor = branding.primaryColor;
+    }
+    
+    return styles;
+  };
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen" style={getFormStyles()}>
       <div className="max-w-2xl mx-auto p-4 py-8">
         <Card>
+          {/* Cover Image */}
+          {formData?.branding?.coverImage && (
+            <div className="w-full h-48 overflow-hidden rounded-t-lg">
+              <img 
+                src={formData.branding.coverImage} 
+                alt="Cover"
+                className="w-full h-full object-cover"
+              />
+            </div>
+          )}
+          
           <CardHeader className="text-center">
+            {/* Logo */}
+            {formData?.branding?.logo && (
+              <div className="flex justify-center mb-4">
+                <img 
+                  src={formData.branding.logo} 
+                  alt="Logo"
+                  className="h-12 w-auto object-contain"
+                />
+              </div>
+            )}
+            
             <CardTitle className="text-2xl">{formData.title}</CardTitle>
             {formData.description && (
               <CardDescription className="text-base">
@@ -616,6 +670,7 @@ export default function PublicForm() {
                 className="w-full" 
                 disabled={submitting}
                 size="lg"
+                style={getButtonStyles()}
               >
                 {submitting ? (
                   <>
@@ -630,14 +685,42 @@ export default function PublicForm() {
               </Button>
             </form>
           </CardContent>
+          
+          {/* Custom Footer */}
+          {formData?.branding?.footerText && (
+            <div className="px-6 pb-4">
+              <div className="text-center pt-4 border-t">
+                <p className="text-xs text-muted-foreground whitespace-pre-wrap">
+                  {formData.branding.footerText}
+                </p>
+                {formData?.branding?.footerLinks && formData.branding.footerLinks.length > 0 && (
+                  <div className="flex justify-center space-x-4 mt-2">
+                    {formData.branding.footerLinks.map((link, index) => (
+                      <a 
+                        key={index}
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-primary hover:underline"
+                      >
+                        {link.text}
+                      </a>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </Card>
         
         {/* Powered by notice */}
-        <div className="text-center mt-8">
-          <p className="text-xs text-muted-foreground">
-            Powered by FormBuilder
-          </p>
-        </div>
+        {!formData?.branding?.removePoweredBy && (
+          <div className="text-center mt-8">
+            <p className="text-xs text-muted-foreground">
+              Powered by FormBuilder
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
