@@ -154,7 +154,7 @@ const DashboardContent = () => {
           <div>
             <h1 className="text-3xl font-bold">My Forms</h1>
             <p className="text-muted-foreground">
-              Create and manage your WhatsApp forms
+              Create and manage your formlychat forms
             </p>
           </div>
           
@@ -206,7 +206,7 @@ const DashboardContent = () => {
               <FileText className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
               <CardTitle className="mb-2">No forms yet</CardTitle>
               <CardDescription className="mb-6">
-                Create your first WhatsApp form to get started collecting responses
+                Create your first formlychat form to get started collecting responses
               </CardDescription>
               <Button onClick={handleCreateForm}>
                 <Plus className="h-4 w-4 mr-2" />

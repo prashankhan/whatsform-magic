@@ -140,7 +140,7 @@ export const generateWhatsAppMessage = (formData: FormData, responses: FormRespo
     }
   });
 
-  message += `_Sent via WhatsForm_`;
+  message += `_Sent via formlychat_`;
   
   return message;
 };

@@ -7,7 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { MessageSquare, Mail, Lock, User } from 'lucide-react';
+import { Mail, Lock, User } from 'lucide-react';
+import WhatsAppIcon from '@/components/ui/whatsapp-icon';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
@@ -87,13 +88,13 @@ const Auth = () => {
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center space-x-2 mb-4">
-            <MessageSquare className="h-10 w-10 text-primary" />
+            <WhatsAppIcon className="h-10 w-10 text-primary" />
             <span className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-              WhatsForm
+              formlychat
             </span>
           </div>
           <p className="text-muted-foreground">
-            Create WhatsApp forms in minutes
+            Create formlychat forms in minutes
           </p>
         </div>
 

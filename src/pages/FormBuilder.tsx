@@ -164,7 +164,7 @@ const FormBuilderContent = () => {
             {id ? 'Edit Form' : 'Create New Form'}
           </h1>
           <p className="text-muted-foreground">
-            Build your WhatsApp form with real-time preview
+            Build your formlychat form with real-time preview
           </p>
         </div>
 

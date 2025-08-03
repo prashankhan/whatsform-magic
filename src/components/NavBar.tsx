@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { MessageSquare, User, BarChart3, Menu } from 'lucide-react';
+import { User, BarChart3, Menu } from 'lucide-react';
+import WhatsAppIcon from '@/components/ui/whatsapp-icon';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import {
@@ -50,9 +51,9 @@ const NavBar = () => {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-2">
-              <MessageSquare className="h-8 w-8 text-primary" />
+              <WhatsAppIcon className="h-8 w-8 text-primary" />
               <span className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                WhatsForm
+                formlychat
               </span>
             </div>
           </div>
@@ -66,12 +67,12 @@ const NavBar = () => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center space-x-2">
-            <MessageSquare className="h-8 w-8 text-primary" />
+            <WhatsAppIcon className="h-8 w-8 text-primary" />
             <span 
               className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent cursor-pointer"
               onClick={() => navigate(isAuthenticated ? '/dashboard' : '/')}
             >
-              WhatsForm
+              formlychat
             </span>
             {isAuthenticated && (
               <nav className="hidden md:flex items-center space-x-4 ml-8">

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, MessageSquare, Zap, Shield } from 'lucide-react';
+import { ArrowRight, Zap, Shield } from 'lucide-react';
+import WhatsAppIcon from '@/components/ui/whatsapp-icon';
 import heroImage from '@/assets/hero-image.jpg';
 
 interface HeroProps {
@@ -19,7 +20,7 @@ const Hero = ({ onGetStarted }: HeroProps) => {
           <div className="space-y-8">
             <div className="space-y-4">
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight">
-                Create <span className="bg-gradient-primary bg-clip-text text-transparent">WhatsApp Forms</span> in Minutes
+                Create <span className="bg-gradient-primary bg-clip-text text-transparent">formlychat Forms</span> in Minutes
               </h1>
               <p className="text-xl text-muted-foreground max-w-2xl">
                 Build professional forms that generate WhatsApp messages instantly. 
@@ -30,7 +31,7 @@ const Hero = ({ onGetStarted }: HeroProps) => {
             {/* Feature highlights */}
             <div className="grid sm:grid-cols-3 gap-4">
               <div className="flex items-center space-x-2">
-                <MessageSquare className="h-5 w-5 text-primary" />
+                <WhatsAppIcon className="h-5 w-5 text-primary" />
                 <span className="text-sm font-medium">WhatsApp Ready</span>
               </div>
               <div className="flex items-center space-x-2">
@@ -72,7 +73,7 @@ const Hero = ({ onGetStarted }: HeroProps) => {
             <div className="relative z-10">
               <img 
                 src={heroImage}
-                alt="WhatsApp form builder illustration"
+                alt="formlychat form builder illustration"
                 className="w-full h-auto rounded-2xl shadow-2xl"
               />
             </div>

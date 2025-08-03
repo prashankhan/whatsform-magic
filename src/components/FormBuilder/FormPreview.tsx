@@ -8,7 +8,9 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FormData, FormField, FormResponse, FormOption, generateWhatsAppUrl } from '@/lib/whatsapp';
-import { Calendar, Upload, MessageSquare } from 'lucide-react';
+import { Calendar, Upload, X } from 'lucide-react';
+import WhatsAppIcon from '@/components/ui/whatsapp-icon';
+import FileUploadField from '@/components/FormBuilder/FileUploadField';
 import { 
   generateBrandingStyles, 
   generateFormCardStyles, 
@@ -229,23 +231,20 @@ const FormPreview = ({ isOpen, onClose, formData }: FormPreviewProps) => {
       case 'file-upload':
         return (
           <div key={field.id} className="space-y-2">
-            <Label htmlFor={field.id} style={generateTextStyles(branding, 'fieldLabel')}>
-              {field.label} {field.required && <span className="text-destructive">*</span>}
+            <Label 
+              className="block text-sm font-medium"
+              style={generateTextStyles(branding, 'fieldLabel')}
+            >
+              {field.label}
+              {field.required && <span className="text-destructive ml-1">*</span>}
             </Label>
             {renderFieldImage(field)}
-            <div className="relative">
-              <Input
-                id={field.id}
-                type="file"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) handleFieldChange(field.id, file);
-                }}
-                required={field.required}
-                className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/80"
-              />
-              <Upload className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-            </div>
+            <FileUploadField
+              fieldId={field.id}
+              value={responses[field.id] as File}
+              onChange={(file) => handleFieldChange(field.id, file)}
+              required={field.required}
+            />
           </div>
         );
 
@@ -302,20 +301,31 @@ const FormPreview = ({ isOpen, onClose, formData }: FormPreviewProps) => {
             )}
 
             <Card style={formCardStyles} className="w-full">
-              <CardHeader>
-                {/* Logo */}
-                {branding.logo && (
-                  <div className="mb-4">
-                    <img 
-                      src={branding.logo} 
-                      alt="Logo"
-                      className="h-12 object-contain"
-                    />
-                  </div>
-                )}
-                <CardTitle style={generateTextStyles(branding, 'title')}>{formData.title}</CardTitle>
+              {/* Logo - centered */}
+              {branding.logo && (
+                <div className="flex justify-center pt-6">
+                  <img 
+                    src={branding.logo} 
+                    alt="Logo"
+                    className="h-16 object-contain"
+                  />
+                </div>
+              )}
+              
+              <CardHeader className="text-center">
+                <CardTitle 
+                  className="text-2xl font-bold"
+                  style={generateTextStyles(branding, 'title')}
+                >
+                  {formData.title}
+                </CardTitle>
                 {formData.description && (
-                  <p style={generateTextStyles(branding, 'description')}>{formData.description}</p>
+                  <p 
+                    className="text-base mt-2"
+                    style={generateTextStyles(branding, 'description')}
+                  >
+                    {formData.description}
+                  </p>
                 )}
               </CardHeader>
               <CardContent className="space-y-6">
@@ -329,7 +339,7 @@ const FormPreview = ({ isOpen, onClose, formData }: FormPreviewProps) => {
                         className="w-full"
                         style={buttonStyles}
                       >
-                        <MessageSquare className="h-4 w-4 mr-2" />
+                        <WhatsAppIcon className="h-4 w-4 mr-2" />
                         Send via WhatsApp
                       </Button>
                     </div>
@@ -342,46 +352,58 @@ const FormPreview = ({ isOpen, onClose, formData }: FormPreviewProps) => {
                   </div>
                 )}
 
-                {/* Footer Branding */}
-                {(branding.footerText || branding.footerLinks?.length) && (
-                  <div className="pt-6 border-t">
-                    {branding.footerText && (
-                      <p 
-                        className="text-xs mb-2"
-                        style={generateTextStyles(branding, 'footerText')}
-                      >
-                        {branding.footerText}
-                      </p>
-                    )}
-                    {branding.footerLinks && branding.footerLinks.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {branding.footerLinks.map((link, index) => (
-                          <a
-                            key={index}
-                            href={link.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs hover:underline"
-                            style={generateLinkStyles(branding, 'footer')}
-                          >
-                            {link.text}
-                          </a>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Powered by WhatsForm (unless removed) */}
-                {!branding.removePoweredBy && (
-                  <div className="pt-2 text-center">
-                    <p className="text-xs text-muted-foreground">
-                      Powered by WhatsForm
-                    </p>
-                  </div>
-                )}
               </CardContent>
             </Card>
+
+            {/* Footer - outside the card like PublicForm */}
+            <div className="text-center space-y-3">
+              {(branding.footerText || branding.footerLinks?.length) && (
+                <div className="space-y-3">
+                  {branding.footerText && (
+                    <p 
+                      className="text-sm"
+                      style={generateTextStyles(branding, 'footerText')}
+                    >
+                      {branding.footerText}
+                    </p>
+                  )}
+                  
+                  {branding.footerLinks && branding.footerLinks.length > 0 && (
+                    <div className="flex flex-wrap gap-4 justify-center">
+                      {branding.footerLinks.map((link, index) => (
+                        <a
+                          key={index}
+                          href={link.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm hover:underline"
+                          style={generateLinkStyles(branding, 'footer')}
+                        >
+                          {link.text}
+                        </a>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {!branding.removePoweredBy && (
+                <div className={`${(branding.footerText || branding.footerLinks?.length) ? 'mt-4 pt-4 border-t border-border' : ''}`}>
+                  <p className="text-xs text-muted-foreground">
+                    Powered by{' '}
+                    <a 
+                      href="https://formlychat.com" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="hover:underline"
+                      style={generateLinkStyles(branding, 'footer')}
+                    >
+                      formlychat
+                    </a>
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </DialogContent>

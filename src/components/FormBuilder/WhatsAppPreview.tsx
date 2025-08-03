@@ -1,7 +1,8 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { AlertTriangle, MessageSquare } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
+import WhatsAppIcon from '@/components/ui/whatsapp-icon';
 import { FormData, generateWhatsAppMessage, generateSampleResponses, truncateMessage } from '@/lib/whatsapp';
 
 interface WhatsAppPreviewProps {
@@ -20,7 +21,7 @@ const WhatsAppPreview = ({ formData }: WhatsAppPreviewProps) => {
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center space-x-2">
-            <MessageSquare className="h-5 w-5 text-whatsapp" />
+            <WhatsAppIcon className="h-5 w-5 text-whatsapp" />
             <span>WhatsApp Preview</span>
           </CardTitle>
           <Badge variant={charCount > maxChars ? "destructive" : "secondary"}>

@@ -10,7 +10,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
-import { CalendarIcon, Loader2, MessageSquare } from 'lucide-react';
+import { CalendarIcon, Loader2 } from 'lucide-react';
+import WhatsAppIcon from '@/components/ui/whatsapp-icon';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -617,7 +618,7 @@ export default function PublicForm() {
               )}
               {thankYouPage?.showBranding !== false && (
                 <p className="text-xs text-muted-foreground pt-4 border-t">
-                  Powered by FormBuilder
+                  Powered by formlychat
                 </p>
               )}
             </CardContent>
@@ -695,7 +696,7 @@ export default function PublicForm() {
                   </>
                 ) : (
                   <>
-                    <MessageSquare className="mr-2 h-4 w-4" />
+                    <WhatsAppIcon className="mr-2 h-4 w-4" />
                     Send via WhatsApp
                   </>
                 )}
@@ -738,7 +739,7 @@ export default function PublicForm() {
         {!branding.removePoweredBy && (
           <div className="text-center mt-8">
             <p className="text-xs text-muted-foreground">
-              Powered by FormBuilder
+              Powered by formlychat
             </p>
           </div>
         )}
