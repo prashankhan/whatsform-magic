@@ -16,11 +16,13 @@ interface ShareModalProps {
   formData: FormData;
   hasUnsavedChanges?: boolean;
   onSaveAndShare?: () => Promise<void>;
+  onPublish?: () => Promise<void>;
 }
 
-const ShareModal = ({ isOpen, onClose, formData, hasUnsavedChanges, onSaveAndShare }: ShareModalProps) => {
+const ShareModal = ({ isOpen, onClose, formData, hasUnsavedChanges, onSaveAndShare, onPublish }: ShareModalProps) => {
   const { toast } = useToast();
   const [copied, setCopied] = useState('');
+  const [isPublishing, setIsPublishing] = useState(false);
 
   // Generate form URL (in a real app, this would be your domain)
   const formUrl = `${window.location.origin}/form/${formData.id}`;
@@ -41,6 +43,27 @@ const ShareModal = ({ isOpen, onClose, formData, hasUnsavedChanges, onSaveAndSha
   const generateQRCode = (url: string) => {
     // Using QR Server API for QR code generation
     return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
+  };
+
+  const handlePublish = async () => {
+    if (!onPublish) return;
+    
+    setIsPublishing(true);
+    try {
+      await onPublish();
+      toast({
+        title: "Form published!",
+        description: "Your form is now live and accessible via the shared links.",
+      });
+    } catch (error) {
+      toast({
+        title: "Publish failed",
+        description: "There was an error publishing your form. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsPublishing(false);
+    }
   };
 
   if (!formData.id) return null;
@@ -73,8 +96,18 @@ const ShareModal = ({ isOpen, onClose, formData, hasUnsavedChanges, onSaveAndSha
         {!hasUnsavedChanges && !formData.isPublished && (
           <Alert className="border-yellow-200 bg-yellow-50">
             <AlertTriangle className="h-4 w-4 text-yellow-600" />
-            <AlertDescription className="text-yellow-800">
-              This form is not published yet. Publish it first to make it accessible via the shared links.
+            <AlertDescription className="text-yellow-800 flex items-center justify-between">
+              <span>This form is not published yet. Publish it first to make it accessible via the shared links.</span>
+              {onPublish && (
+                <Button 
+                  size="sm" 
+                  onClick={handlePublish}
+                  disabled={isPublishing}
+                  className="ml-3"
+                >
+                  {isPublishing ? 'Publishing...' : 'Publish Now'}
+                </Button>
+              )}
             </AlertDescription>
           </Alert>
         )}
@@ -85,16 +118,21 @@ const ShareModal = ({ isOpen, onClose, formData, hasUnsavedChanges, onSaveAndSha
               Sharing options will be available after saving your changes
             </div>
           )}
+          {!hasUnsavedChanges && !formData.isPublished && (
+            <div className="bg-muted/50 p-3 rounded-lg mb-4 text-center text-sm text-muted-foreground">
+              Sharing options will be available after publishing your form
+            </div>
+          )}
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="link" disabled={hasUnsavedChanges}>
+            <TabsTrigger value="link" disabled={hasUnsavedChanges || !formData.isPublished}>
               <Link className="h-4 w-4 mr-2" />
               Link
             </TabsTrigger>
-            <TabsTrigger value="qr" disabled={hasUnsavedChanges}>
+            <TabsTrigger value="qr" disabled={hasUnsavedChanges || !formData.isPublished}>
               <QrCode className="h-4 w-4 mr-2" />
               QR Code
             </TabsTrigger>
-            <TabsTrigger value="embed" disabled={hasUnsavedChanges}>
+            <TabsTrigger value="embed" disabled={hasUnsavedChanges || !formData.isPublished}>
               <Code className="h-4 w-4 mr-2" />
               Embed
             </TabsTrigger>

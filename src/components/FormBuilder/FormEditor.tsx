@@ -201,6 +201,16 @@ const FormEditor = ({ initialData, onSave, isLoading }: FormEditorProps) => {
     }
   };
 
+  const handlePublish = async () => {
+    const updatedFormData = {
+      ...formData,
+      isPublished: true
+    };
+    
+    setFormData(updatedFormData);
+    await onSave(updatedFormData);
+  };
+
   const handleSelectTemplate = (template: FormTemplate) => {
     const fieldsWithIds = template.fields.map(field => ({
       ...field,
@@ -551,6 +561,7 @@ const FormEditor = ({ initialData, onSave, isLoading }: FormEditorProps) => {
         formData={formData}
         hasUnsavedChanges={hasUnsavedChanges}
         onSaveAndShare={handleSaveAndShare}
+        onPublish={handlePublish}
       />
     </div>
   );
