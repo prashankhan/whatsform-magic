@@ -262,10 +262,11 @@ const FormPreview = ({ isOpen, onClose, formData }: FormPreviewProps) => {
 
   if (!formData.title) return null;
 
-  const brandingStyles = formData.branding ? {
-    '--primary': formData.branding.primaryColor || '#3b82f6',
-    '--background': formData.branding.backgroundColor || '#ffffff',
-  } as React.CSSProperties : {};
+  const branding = formData.branding || {};
+  const pageStyles = generateBrandingStyles(branding);
+  const formCardStyles = generateFormCardStyles(branding);
+  const buttonStyles = generateButtonStyles(branding);
+  const cssVariables = generateCSSVariables(branding);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -274,33 +275,33 @@ const FormPreview = ({ isOpen, onClose, formData }: FormPreviewProps) => {
           <DialogTitle>Form Preview</DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-6" style={brandingStyles}>
+        <div className="space-y-6" style={{ ...pageStyles, ...cssVariables }}>
           {/* Cover Image */}
-          {formData.branding?.coverImage && (
+          {branding.coverImage && (
             <div className="w-full">
               <img 
-                src={formData.branding.coverImage} 
+                src={branding.coverImage} 
                 alt="Cover"
                 className="w-full h-48 object-cover rounded-lg"
               />
             </div>
           )}
 
-          <Card style={{ backgroundColor: formData.branding?.backgroundColor }}>
+          <Card style={formCardStyles}>
             <CardHeader>
               {/* Logo */}
-              {formData.branding?.logo && (
+              {branding.logo && (
                 <div className="mb-4">
                   <img 
-                    src={formData.branding.logo} 
+                    src={branding.logo} 
                     alt="Logo"
                     className="h-12 object-contain"
                   />
                 </div>
               )}
-              <CardTitle style={{ color: formData.branding?.primaryColor }}>{formData.title}</CardTitle>
+              <CardTitle style={generateTextStyles(branding, 'title')}>{formData.title}</CardTitle>
               {formData.description && (
-                <p className="text-muted-foreground">{formData.description}</p>
+                <p style={generateTextStyles(branding, 'description')}>{formData.description}</p>
               )}
             </CardHeader>
             <CardContent className="space-y-4">
@@ -311,7 +312,7 @@ const FormPreview = ({ isOpen, onClose, formData }: FormPreviewProps) => {
                   <Button 
                     onClick={handleSubmit} 
                     className="w-full"
-                    style={{ backgroundColor: formData.branding?.primaryColor }}
+                    style={buttonStyles}
                   >
                     <Send className="h-4 w-4 mr-2" />
                     Send via WhatsApp
@@ -326,23 +327,26 @@ const FormPreview = ({ isOpen, onClose, formData }: FormPreviewProps) => {
               )}
 
               {/* Footer Branding */}
-              {(formData.branding?.footerText || formData.branding?.footerLinks?.length) && (
+              {(branding.footerText || branding.footerLinks?.length) && (
                 <div className="pt-6 border-t">
-                  {formData.branding.footerText && (
-                    <p className="text-xs text-muted-foreground mb-2">
-                      {formData.branding.footerText}
+                  {branding.footerText && (
+                    <p 
+                      className="text-xs mb-2"
+                      style={generateTextStyles(branding, 'footerText')}
+                    >
+                      {branding.footerText}
                     </p>
                   )}
-                  {formData.branding.footerLinks && formData.branding.footerLinks.length > 0 && (
+                  {branding.footerLinks && branding.footerLinks.length > 0 && (
                     <div className="flex flex-wrap gap-2">
-                      {formData.branding.footerLinks.map((link, index) => (
+                      {branding.footerLinks.map((link, index) => (
                         <a
                           key={index}
                           href={link.url}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-xs hover:underline"
-                          style={{ color: formData.branding?.primaryColor }}
+                          style={generateLinkStyles(branding, 'footer')}
                         >
                           {link.text}
                         </a>
@@ -353,7 +357,7 @@ const FormPreview = ({ isOpen, onClose, formData }: FormPreviewProps) => {
               )}
 
               {/* Powered by WhatsForm (unless removed) */}
-              {!formData.branding?.removePoweredBy && (
+              {!branding.removePoweredBy && (
                 <div className="pt-2 text-center">
                   <p className="text-xs text-muted-foreground">
                     Powered by WhatsForm

@@ -19,15 +19,43 @@ export interface FormField {
 }
 
 export interface FormBranding {
+  // Images
   coverImage?: string;
   logo?: string;
+  backgroundImage?: string;
+  customFavicon?: string;
+  
+  // Page & Form Colors
+  pageBackgroundColor?: string;
+  formBackgroundColor?: string;
+  
+  // Button Styling
+  buttonColor?: string;
+  buttonTextColor?: string;
+  buttonBorderRadius?: number;
+  
+  // Text Colors
+  titleColor?: string;
+  descriptionColor?: string;
+  fieldLabelColor?: string;
+  footerTextColor?: string;
+  
+  // Field Styling
+  fieldBorderColor?: string;
+  placeholderTextColor?: string;
+  
+  // Link Colors
+  linkColor?: string;
+  footerLinkColor?: string;
+  
+  // Legacy colors (for backward compatibility)
   primaryColor?: string;
   backgroundColor?: string;
-  backgroundImage?: string;
-  removePoweredBy?: boolean;
-  customFavicon?: string;
+  
+  // Footer & Branding
   footerText?: string;
   footerLinks?: Array<{ text: string; url: string }>;
+  removePoweredBy?: boolean;
 }
 
 export interface FormData {

@@ -595,36 +595,12 @@ export default function PublicForm() {
     );
   }
 
-  // Generate inline styles for branding
-  const getFormStyles = () => {
-    const branding = formData?.branding || {};
-    const styles: React.CSSProperties = {};
-    
-    if (branding.backgroundColor) {
-      styles.backgroundColor = branding.backgroundColor;
-    }
-    
-    if (branding.backgroundImage) {
-      styles.backgroundImage = `url(${branding.backgroundImage})`;
-      styles.backgroundSize = 'cover';
-      styles.backgroundPosition = 'center';
-      styles.backgroundRepeat = 'no-repeat';
-    }
-    
-    return styles;
-  };
-
-  const getButtonStyles = () => {
-    const branding = formData?.branding || {};
-    const styles: React.CSSProperties = {};
-    
-    if (branding.primaryColor) {
-      styles.backgroundColor = branding.primaryColor;
-      styles.borderColor = branding.primaryColor;
-    }
-    
-    return styles;
-  };
+  // Generate branding styles using utility functions
+  const branding = formData?.branding || {};
+  const pageStyles = generateBrandingStyles(branding);
+  const formCardStyles = generateFormCardStyles(branding);
+  const buttonStyles = generateButtonStyles(branding);
+  const cssVariables = generateCSSVariables(branding);
 
   return (
     <div className="min-h-screen" style={getFormStyles()}>
