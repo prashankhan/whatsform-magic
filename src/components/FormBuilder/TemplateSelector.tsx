@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { FileText, Users, Briefcase, MessageSquare, Mail, ShoppingCart, GraduationCap, Heart, Home } from 'lucide-react';
+import { FileText, Calendar, Briefcase, MessageSquare, TrendingUp, ShoppingCart, GraduationCap, Activity, Building } from 'lucide-react';
 import { FormTemplate } from '@/lib/whatsapp';
 import { formTemplates, getTemplatesByCategory } from '@/data/formTemplates';
 
@@ -18,16 +18,16 @@ const TemplateSelector = ({ isOpen, onClose, onSelectTemplate }: TemplateSelecto
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
-      case 'General': return <FileText className="h-5 w-5" />;
-      case 'Events': return <Users className="h-5 w-5" />;
-      case 'HR': return <Briefcase className="h-5 w-5" />;
-      case 'Feedback': return <MessageSquare className="h-5 w-5" />;
-      case 'Marketing': return <Mail className="h-5 w-5" />;
-      case 'E-commerce': return <ShoppingCart className="h-5 w-5" />;
-      case 'Education': return <GraduationCap className="h-5 w-5" />;
-      case 'Healthcare': return <Heart className="h-5 w-5" />;
-      case 'Real Estate': return <Home className="h-5 w-5" />;
-      default: return <FileText className="h-5 w-5" />;
+      case 'General': return <FileText className="h-5 w-5 text-primary" />;
+      case 'Events': return <Calendar className="h-5 w-5 text-blue-600" />;
+      case 'HR': return <Briefcase className="h-5 w-5 text-purple-600" />;
+      case 'Feedback': return <MessageSquare className="h-5 w-5 text-green-600" />;
+      case 'Marketing': return <TrendingUp className="h-5 w-5 text-orange-600" />;
+      case 'E-commerce': return <ShoppingCart className="h-5 w-5 text-indigo-600" />;
+      case 'Education': return <GraduationCap className="h-5 w-5 text-yellow-600" />;
+      case 'Healthcare': return <Activity className="h-5 w-5 text-red-600" />;
+      case 'Real Estate': return <Building className="h-5 w-5 text-teal-600" />;
+      default: return <FileText className="h-5 w-5 text-muted-foreground" />;
     }
   };
 
