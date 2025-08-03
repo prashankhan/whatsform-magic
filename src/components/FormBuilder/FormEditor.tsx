@@ -18,7 +18,7 @@ import TemplateSelector from './TemplateSelector';
 import ThankYouPageEditor from './ThankYouPageEditor';
 import { WebhookSettings } from './WebhookSettings';
 import { BrandingEditor } from './BrandingEditor';
-import { Save, Eye, Share2, Globe, Lock, Layout, ChevronDown, ChevronRight } from 'lucide-react';
+import { Save, Eye, Share2, Globe, Lock, Layout, ChevronDown, ChevronRight, Sparkles, Webhook, Crown } from 'lucide-react';
 import { FormTemplate } from '@/lib/whatsapp';
 import {
   DndContext,
@@ -309,31 +309,6 @@ const FormEditor = ({ initialData, onSave, isLoading }: FormEditorProps) => {
           </Card>
         </Collapsible>
 
-        {/* Form Branding */}
-        <Collapsible open={brandingOpen} onOpenChange={setBrandingOpen}>
-          <Card>
-            <CollapsibleTrigger asChild>
-              <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
-                <div className="flex items-center justify-between">
-                  <CardTitle>Form Branding</CardTitle>
-                  {brandingOpen ? (
-                    <ChevronDown className="h-4 w-4" />
-                  ) : (
-                    <ChevronRight className="h-4 w-4" />
-                  )}
-                </div>
-              </CardHeader>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <CardContent className="p-0">
-                <BrandingEditor
-                  branding={formData.branding}
-                  onChange={(branding) => setFormData(prev => ({ ...prev, branding }))}
-                />
-              </CardContent>
-            </CollapsibleContent>
-          </Card>
-        </Collapsible>
 
         {/* Form Fields */}
         <Collapsible open={fieldsOpen} onOpenChange={setFieldsOpen}>
@@ -410,13 +385,34 @@ const FormEditor = ({ initialData, onSave, isLoading }: FormEditorProps) => {
           </Card>
         </Collapsible>
 
-        {/* Thank You Page Editor */}
-        <ThankYouPageEditor
-          formData={formData}
-          onUpdate={setFormData}
-          isExpanded={expandedThankYou}
-          onToggleExpanded={() => setExpandedThankYou(!expandedThankYou)}
-        />
+        {/* Thank You Page */}
+        <Collapsible open={expandedThankYou} onOpenChange={setExpandedThankYou}>
+          <Card>
+            <CollapsibleTrigger asChild>
+              <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center space-x-2">
+                    <Sparkles className="h-5 w-5" />
+                    <span>Thank You Page</span>
+                  </CardTitle>
+                  {expandedThankYou ? (
+                    <ChevronDown className="h-4 w-4" />
+                  ) : (
+                    <ChevronRight className="h-4 w-4" />
+                  )}
+                </div>
+              </CardHeader>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent>
+                <ThankYouPageEditor
+                  formData={formData}
+                  onUpdate={setFormData}
+                />
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
 
         {/* Webhook Settings */}
         <Collapsible open={webhooksOpen} onOpenChange={setWebhooksOpen}>
@@ -424,7 +420,10 @@ const FormEditor = ({ initialData, onSave, isLoading }: FormEditorProps) => {
             <CollapsibleTrigger asChild>
               <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
                 <div className="flex items-center justify-between">
-                  <CardTitle>Webhook Settings</CardTitle>
+                  <CardTitle className="flex items-center space-x-2">
+                    <Webhook className="h-5 w-5" />
+                    <span>Webhook Settings</span>
+                  </CardTitle>
                   {webhooksOpen ? (
                     <ChevronDown className="h-4 w-4" />
                   ) : (
@@ -434,7 +433,7 @@ const FormEditor = ({ initialData, onSave, isLoading }: FormEditorProps) => {
               </CardHeader>
             </CollapsibleTrigger>
             <CollapsibleContent>
-              <CardContent className="p-0">
+              <CardContent>
                 <WebhookSettings
                   webhookConfig={{
                     webhook_enabled: formData.webhook_enabled || false,
@@ -451,6 +450,35 @@ const FormEditor = ({ initialData, onSave, isLoading }: FormEditorProps) => {
                       webhook_headers: config.webhook_headers
                     }))
                   }
+                />
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
+
+        {/* Form Branding */}
+        <Collapsible open={brandingOpen} onOpenChange={setBrandingOpen}>
+          <Card>
+            <CollapsibleTrigger asChild>
+              <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center space-x-2">
+                    <Crown className="h-5 w-5" />
+                    <span>Form Branding</span>
+                  </CardTitle>
+                  {brandingOpen ? (
+                    <ChevronDown className="h-4 w-4" />
+                  ) : (
+                    <ChevronRight className="h-4 w-4" />
+                  )}
+                </div>
+              </CardHeader>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent>
+                <BrandingEditor
+                  branding={formData.branding}
+                  onChange={(branding) => setFormData(prev => ({ ...prev, branding }))}
                 />
               </CardContent>
             </CollapsibleContent>
