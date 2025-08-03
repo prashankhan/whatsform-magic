@@ -10,13 +10,22 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
-import { CalendarIcon, Loader2 } from 'lucide-react';
+import { CalendarIcon, Loader2, MessageSquare } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { FormData, FormField, FormResponse, FormOption, generateWhatsAppUrl } from '@/lib/whatsapp';
 import FileUploadField from '@/components/FormBuilder/FileUploadField';
 import { SecurityValidator } from '@/utils/security';
+import { 
+  generateBrandingStyles, 
+  generateFormCardStyles, 
+  generateButtonStyles, 
+  generateTextStyles, 
+  generateFieldStyles, 
+  generateLinkStyles,
+  generateCSSVariables 
+} from '@/utils/brandingStyles';
 
 export default function PublicForm() {
   const { id } = useParams<{ id: string }>();
@@ -27,6 +36,24 @@ export default function PublicForm() {
   const [submitted, setSubmitted] = useState(false);
   const [responses, setResponses] = useState<FormResponse>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Update favicon when form loads
+  const updateFavicon = (faviconUrl?: string) => {
+    if (!faviconUrl) return;
+    
+    // Remove existing favicon
+    const existingFavicon = document.querySelector('link[rel="icon"]');
+    if (existingFavicon) {
+      existingFavicon.remove();
+    }
+    
+    // Add new favicon
+    const newFavicon = document.createElement('link');
+    newFavicon.rel = 'icon';
+    newFavicon.href = faviconUrl;
+    newFavicon.type = 'image/png';
+    document.head.appendChild(newFavicon);
+  };
 
   useEffect(() => {
     if (id) {
@@ -68,6 +95,11 @@ export default function PublicForm() {
           form_id: form.id
         });
         setFormData(form);
+        
+        // Update favicon if custom favicon is set
+        if (form.branding?.customFavicon) {
+          updateFavicon(form.branding.customFavicon);
+        }
       }
     } catch (error) {
       console.error('Error loading form:', error);
@@ -603,14 +635,14 @@ export default function PublicForm() {
   const cssVariables = generateCSSVariables(branding);
 
   return (
-    <div className="min-h-screen" style={getFormStyles()}>
+    <div className="min-h-screen" style={{ ...pageStyles, ...cssVariables }}>
       <div className="max-w-2xl mx-auto p-4 py-8">
-        <Card>
+        <Card style={formCardStyles}>
           {/* Cover Image */}
-          {formData?.branding?.coverImage && (
+          {branding.coverImage && (
             <div className="w-full h-48 overflow-hidden rounded-t-lg">
               <img 
-                src={formData.branding.coverImage} 
+                src={branding.coverImage} 
                 alt="Cover"
                 className="w-full h-full object-cover"
               />
@@ -619,19 +651,27 @@ export default function PublicForm() {
           
           <CardHeader className="text-center">
             {/* Logo */}
-            {formData?.branding?.logo && (
+            {branding.logo && (
               <div className="flex justify-center mb-4">
                 <img 
-                  src={formData.branding.logo} 
+                  src={branding.logo} 
                   alt="Logo"
                   className="h-12 w-auto object-contain"
                 />
               </div>
             )}
             
-            <CardTitle className="text-2xl">{formData.title}</CardTitle>
+            <CardTitle 
+              className="text-2xl" 
+              style={generateTextStyles(branding, 'title')}
+            >
+              {formData.title}
+            </CardTitle>
             {formData.description && (
-              <CardDescription className="text-base">
+              <CardDescription 
+                className="text-base"
+                style={generateTextStyles(branding, 'description')}
+              >
                 {formData.description}
               </CardDescription>
             )}
@@ -646,7 +686,7 @@ export default function PublicForm() {
                 className="w-full" 
                 disabled={submitting}
                 size="lg"
-                style={getButtonStyles()}
+                style={buttonStyles}
               >
                 {submitting ? (
                   <>
@@ -655,6 +695,7 @@ export default function PublicForm() {
                   </>
                 ) : (
                   <>
+                    <MessageSquare className="mr-2 h-4 w-4" />
                     Send via WhatsApp
                   </>
                 )}
@@ -663,21 +704,25 @@ export default function PublicForm() {
           </CardContent>
           
           {/* Custom Footer */}
-          {formData?.branding?.footerText && (
+          {branding.footerText && (
             <div className="px-6 pb-4">
               <div className="text-center pt-4 border-t">
-                <p className="text-xs text-muted-foreground whitespace-pre-wrap">
-                  {formData.branding.footerText}
+                <p 
+                  className="text-xs whitespace-pre-wrap"
+                  style={generateTextStyles(branding, 'footerText')}
+                >
+                  {branding.footerText}
                 </p>
-                {formData?.branding?.footerLinks && formData.branding.footerLinks.length > 0 && (
+                {branding.footerLinks && branding.footerLinks.length > 0 && (
                   <div className="flex justify-center space-x-4 mt-2">
-                    {formData.branding.footerLinks.map((link, index) => (
+                    {branding.footerLinks.map((link, index) => (
                       <a 
                         key={index}
                         href={link.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs text-primary hover:underline"
+                        className="text-xs hover:underline"
+                        style={generateLinkStyles(branding, 'footer')}
                       >
                         {link.text}
                       </a>
@@ -690,7 +735,7 @@ export default function PublicForm() {
         </Card>
         
         {/* Powered by notice */}
-        {!formData?.branding?.removePoweredBy && (
+        {!branding.removePoweredBy && (
           <div className="text-center mt-8">
             <p className="text-xs text-muted-foreground">
               Powered by FormBuilder

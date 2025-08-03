@@ -9,6 +9,15 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FormData, FormField, FormResponse, FormOption, generateWhatsAppUrl } from '@/lib/whatsapp';
 import { Calendar, Upload, Send } from 'lucide-react';
+import { 
+  generateBrandingStyles, 
+  generateFormCardStyles, 
+  generateButtonStyles, 
+  generateTextStyles, 
+  generateFieldStyles, 
+  generateLinkStyles,
+  generateCSSVariables 
+} from '@/utils/brandingStyles';
 
 interface FormPreviewProps {
   isOpen: boolean;
