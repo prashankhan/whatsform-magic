@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { FileText, Users, Briefcase, MessageSquare, Mail, ShoppingCart } from 'lucide-react';
+import { FileText, Users, Briefcase, MessageSquare, Mail, ShoppingCart, GraduationCap, Heart, Home } from 'lucide-react';
 import { FormTemplate } from '@/lib/whatsapp';
 import { formTemplates, getTemplatesByCategory } from '@/data/formTemplates';
 
@@ -24,6 +24,9 @@ const TemplateSelector = ({ isOpen, onClose, onSelectTemplate }: TemplateSelecto
       case 'Feedback': return <MessageSquare className="h-5 w-5" />;
       case 'Marketing': return <Mail className="h-5 w-5" />;
       case 'E-commerce': return <ShoppingCart className="h-5 w-5" />;
+      case 'Education': return <GraduationCap className="h-5 w-5" />;
+      case 'Healthcare': return <Heart className="h-5 w-5" />;
+      case 'Real Estate': return <Home className="h-5 w-5" />;
       default: return <FileText className="h-5 w-5" />;
     }
   };
@@ -49,7 +52,7 @@ const TemplateSelector = ({ isOpen, onClose, onSelectTemplate }: TemplateSelecto
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-7xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Choose a Template</DialogTitle>
           <DialogDescription>
@@ -78,7 +81,7 @@ const TemplateSelector = ({ isOpen, onClose, onSelectTemplate }: TemplateSelecto
                 {getCategoryIcon(category)}
                 <h3 className="text-sm font-medium">{category}</h3>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {templates.map((template) => (
                   <Card 
                     key={template.id} 

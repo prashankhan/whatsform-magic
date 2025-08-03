@@ -18,7 +18,7 @@ import TemplateSelector from './TemplateSelector';
 import ThankYouPageEditor from './ThankYouPageEditor';
 import { WebhookSettings } from './WebhookSettings';
 import { BrandingEditor } from './BrandingEditor';
-import { Save, Eye, Share2, Globe, Lock, Layout, ChevronDown, ChevronRight, Sparkles, Webhook, Crown } from 'lucide-react';
+import { Save, Eye, Share2, Globe, Lock, Layout, ChevronDown, ChevronRight, Sparkles, Webhook, Crown, Settings, List } from 'lucide-react';
 import { FormTemplate } from '@/lib/whatsapp';
 import {
   DndContext,
@@ -232,7 +232,10 @@ const FormEditor = ({ initialData, onSave, isLoading }: FormEditorProps) => {
             <CollapsibleTrigger asChild>
               <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
                 <div className="flex items-center justify-between">
-                  <CardTitle>Form Settings</CardTitle>
+                  <CardTitle className="flex items-center space-x-2">
+                    <Settings className="h-5 w-5" />
+                    <span>Form Settings</span>
+                  </CardTitle>
                   {settingsOpen ? (
                     <ChevronDown className="h-4 w-4" />
                   ) : (
@@ -316,7 +319,10 @@ const FormEditor = ({ initialData, onSave, isLoading }: FormEditorProps) => {
             <CollapsibleTrigger asChild>
               <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
                 <div className="flex items-center justify-between">
-                  <CardTitle>Form Fields</CardTitle>
+                  <CardTitle className="flex items-center space-x-2">
+                    <List className="h-5 w-5" />
+                    <span>Form Fields</span>
+                  </CardTitle>
                   <div className="flex items-center space-x-2">
                     <span className="text-sm text-muted-foreground">
                       {formData.fields.length} field{formData.fields.length !== 1 ? 's' : ''}
@@ -357,8 +363,16 @@ const FormEditor = ({ initialData, onSave, isLoading }: FormEditorProps) => {
                 </DndContext>
                 
                 {formData.fields.length === 0 && (
-                  <div className="text-center p-8 border-2 border-dashed border-muted rounded-lg">
-                    <p className="text-muted-foreground">No fields yet. Add your first field below.</p>
+                  <div className="text-center p-8 border-2 border-dashed border-muted rounded-lg space-y-4">
+                    <p className="text-muted-foreground">No fields yet. Start with a template or add your first field below.</p>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setShowTemplates(true)}
+                      className="w-full max-w-xs"
+                    >
+                      <Layout className="h-4 w-4 mr-2" />
+                      Choose Template
+                    </Button>
                   </div>
                 )}
 
