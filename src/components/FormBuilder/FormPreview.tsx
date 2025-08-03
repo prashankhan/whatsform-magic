@@ -8,7 +8,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FormData, FormField, FormResponse, FormOption, generateWhatsAppUrl } from '@/lib/whatsapp';
-import { Calendar, Upload, Send } from 'lucide-react';
+import { Calendar, Upload, MessageSquare } from 'lucide-react';
 import { 
   generateBrandingStyles, 
   generateFormCardStyles, 
@@ -279,102 +279,110 @@ const FormPreview = ({ isOpen, onClose, formData }: FormPreviewProps) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0">
+        <DialogHeader className="p-6 pb-0">
           <DialogTitle>Form Preview</DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-6" style={{ ...pageStyles, ...cssVariables }}>
-          {/* Cover Image */}
-          {branding.coverImage && (
-            <div className="w-full">
-              <img 
-                src={branding.coverImage} 
-                alt="Cover"
-                className="w-full h-48 object-cover rounded-lg"
-              />
-            </div>
-          )}
+        {/* Full page layout like PublicForm */}
+        <div 
+          className="min-h-[80vh] w-full flex items-start justify-center p-6"
+          style={{ ...pageStyles, ...cssVariables }}
+        >
+          <div className="w-full max-w-2xl space-y-6">
+            {/* Cover Image */}
+            {branding.coverImage && (
+              <div className="w-full">
+                <img 
+                  src={branding.coverImage} 
+                  alt="Cover"
+                  className="w-full h-48 object-cover rounded-lg"
+                />
+              </div>
+            )}
 
-          <Card style={formCardStyles}>
-            <CardHeader>
-              {/* Logo */}
-              {branding.logo && (
-                <div className="mb-4">
-                  <img 
-                    src={branding.logo} 
-                    alt="Logo"
-                    className="h-12 object-contain"
-                  />
-                </div>
-              )}
-              <CardTitle style={generateTextStyles(branding, 'title')}>{formData.title}</CardTitle>
-              {formData.description && (
-                <p style={generateTextStyles(branding, 'description')}>{formData.description}</p>
-              )}
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {formData.fields.map(renderField)}
-              
-              {formData.fields.length > 0 && (
-                <div className="pt-4">
-                  <Button 
-                    onClick={handleSubmit} 
-                    className="w-full"
-                    style={buttonStyles}
-                  >
-                    <Send className="h-4 w-4 mr-2" />
-                    Send via WhatsApp
-                  </Button>
-                </div>
-              )}
-              
-              {formData.fields.length === 0 && (
-                <div className="text-center py-8 text-muted-foreground">
-                  No fields added yet. Add some fields to see the preview.
-                </div>
-              )}
-
-              {/* Footer Branding */}
-              {(branding.footerText || branding.footerLinks?.length) && (
-                <div className="pt-6 border-t">
-                  {branding.footerText && (
-                    <p 
-                      className="text-xs mb-2"
-                      style={generateTextStyles(branding, 'footerText')}
-                    >
-                      {branding.footerText}
-                    </p>
-                  )}
-                  {branding.footerLinks && branding.footerLinks.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {branding.footerLinks.map((link, index) => (
-                        <a
-                          key={index}
-                          href={link.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs hover:underline"
-                          style={generateLinkStyles(branding, 'footer')}
-                        >
-                          {link.text}
-                        </a>
-                      ))}
+            <Card style={formCardStyles} className="w-full">
+              <CardHeader>
+                {/* Logo */}
+                {branding.logo && (
+                  <div className="mb-4">
+                    <img 
+                      src={branding.logo} 
+                      alt="Logo"
+                      className="h-12 object-contain"
+                    />
+                  </div>
+                )}
+                <CardTitle style={generateTextStyles(branding, 'title')}>{formData.title}</CardTitle>
+                {formData.description && (
+                  <p style={generateTextStyles(branding, 'description')}>{formData.description}</p>
+                )}
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="space-y-6">
+                  {formData.fields.map(renderField)}
+                  
+                  {formData.fields.length > 0 && (
+                    <div className="pt-4">
+                      <Button 
+                        type="submit"
+                        className="w-full"
+                        style={buttonStyles}
+                      >
+                        <MessageSquare className="h-4 w-4 mr-2" />
+                        Send via WhatsApp
+                      </Button>
                     </div>
                   )}
-                </div>
-              )}
+                </form>
+                
+                {formData.fields.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No fields added yet. Add some fields to see the preview.
+                  </div>
+                )}
 
-              {/* Powered by WhatsForm (unless removed) */}
-              {!branding.removePoweredBy && (
-                <div className="pt-2 text-center">
-                  <p className="text-xs text-muted-foreground">
-                    Powered by WhatsForm
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                {/* Footer Branding */}
+                {(branding.footerText || branding.footerLinks?.length) && (
+                  <div className="pt-6 border-t">
+                    {branding.footerText && (
+                      <p 
+                        className="text-xs mb-2"
+                        style={generateTextStyles(branding, 'footerText')}
+                      >
+                        {branding.footerText}
+                      </p>
+                    )}
+                    {branding.footerLinks && branding.footerLinks.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {branding.footerLinks.map((link, index) => (
+                          <a
+                            key={index}
+                            href={link.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs hover:underline"
+                            style={generateLinkStyles(branding, 'footer')}
+                          >
+                            {link.text}
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Powered by WhatsForm (unless removed) */}
+                {!branding.removePoweredBy && (
+                  <div className="pt-2 text-center">
+                    <p className="text-xs text-muted-foreground">
+                      Powered by WhatsForm
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
