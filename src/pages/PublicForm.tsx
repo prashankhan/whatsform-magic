@@ -147,14 +147,16 @@ export default function PublicForm() {
 
     try {
       // Security: Rate limiting check
-      const { data: rateLimitCheck } = await supabase.rpc('check_submission_rate_limit', {
+      const { data: rateLimitCheck, error: rateLimitError } = await supabase.rpc('check_submission_rate_limit', {
         client_ip: '127.0.0.1', // In production, this would come from server headers
         target_form_id: formData.id,
         max_submissions: 10,
         window_minutes: 60
       });
 
-      if (!rateLimitCheck) {
+      if (rateLimitError) {
+        console.warn('Rate limit check error; allowing submission to proceed:', rateLimitError);
+      } else if (rateLimitCheck === false) {
         toast({
           title: "Too many submissions",
           description: "Please wait before submitting again.",
